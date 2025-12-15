@@ -1,54 +1,78 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "OpenAPI Plant Store",
-    "description": "A sample API that uses a plant store as an example to demonstrate features in the OpenAPI specification",
-    "license": {
-      "name": "MIT"
-    },
-    "version": "1.0.0"
+    "title": "Fleeticc Open API",
+    "description": "Complete API reference for Fleeticc GPS vehicle tracking endpoints",
+    "version": "1.0.0",
+    "contact": {
+      "email": "info@fleeticc.com",
+      "url": "https://fleeticc.com/contact"
+    }
   },
   "servers": [
     {
-      "url": "http://sandbox.mintlify.com"
-    }
-  ],
-  "security": [
-    {
-      "bearerAuth": []
+      "url": "https://bounpkufhwhptqbktpfl.supabase.co/functions/v1",
+      "description": "Production server"
     }
   ],
   "paths": {
-    "/plants": {
+    "/open-api-authorization": {
       "get": {
-        "description": "Returns all plants from the system that the user has access to",
+        "summary": "Get Access Token",
+        "description": "Get an access token for making authenticated API requests. Access tokens are valid for 1 hour (3600 seconds).",
+        "operationId": "getAccessToken",
         "parameters": [
           {
-            "name": "limit",
+            "name": "time",
             "in": "query",
-            "description": "The maximum number of results to return",
+            "required": true,
+            "description": "Unix timestamp in seconds (when request is sent)",
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int64"
+            }
+          },
+          {
+            "name": "account",
+            "in": "query",
+            "required": true,
+            "description": "User email address",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "password",
+            "in": "query",
+            "required": true,
+            "description": "Your Fleeticc account password",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "signature",
+            "in": "query",
+            "required": true,
+            "description": "MD5 hash = md5(md5(password) + time)",
+            "schema": {
+              "type": "string"
             }
           }
         ],
         "responses": {
           "200": {
-            "description": "Plant response",
+            "description": "Success",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/Plant"
-                  }
+                  "$ref": "#/components/schemas/AuthResponse"
                 }
               }
             }
           },
           "400": {
-            "description": "Unexpected error",
+            "description": "Bad Request",
             "content": {
               "application/json": {
                 "schema": {
@@ -56,35 +80,29 @@
                 }
               }
             }
-          }
-        }
-      },
-      "post": {
-        "description": "Creates a new plant in the store",
-        "requestBody": {
-          "description": "Plant to add to the store",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/NewPlant"
-              }
-            }
           },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "plant response",
+          "401": {
+            "description": "Unauthorized",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Plant"
+                  "$ref": "#/components/schemas/Error"
                 }
               }
             }
           },
-          "400": {
-            "description": "unexpected error",
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
             "content": {
               "application/json": {
                 "schema": {
@@ -96,15 +114,194 @@
         }
       }
     },
-    "/plants/{id}": {
-      "delete": {
-        "description": "Deletes a single plant based on the ID supplied",
+    "/open-api-list-vehicles": {
+      "get": {
+        "summary": "List Vehicles",
+        "description": "Get a list of all vehicles (devices) associated with the authenticated user's account",
+        "operationId": "listVehicles",
         "parameters": [
           {
-            "name": "id",
-            "in": "path",
-            "description": "ID of plant to delete",
+            "name": "access_token",
+            "in": "query",
             "required": true,
+            "description": "API access token from authorization endpoint",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VehicleListResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/open-api-track": {
+      "get": {
+        "summary": "Track Vehicles",
+        "description": "Get the latest coordinate data for tracking devices (vehicles)",
+        "operationId": "trackVehicles",
+        "parameters": [
+          {
+            "name": "access_token",
+            "in": "query",
+            "required": true,
+            "description": "API access token from authorization endpoint",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "imeis",
+            "in": "query",
+            "required": true,
+            "description": "Comma-separated list of IMEIs (max 100)",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrackResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/open-api-playback": {
+      "get": {
+        "summary": "Playback Historical Data",
+        "description": "Get historical GPS tracking data for a device within a specified time period",
+        "operationId": "playback",
+        "parameters": [
+          {
+            "name": "access_token",
+            "in": "query",
+            "required": true,
+            "description": "API access token from authorization endpoint",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "imei",
+            "in": "query",
+            "required": true,
+            "description": "Single IMEI to get playback data for",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "begintime",
+            "in": "query",
+            "required": true,
+            "description": "Begin time (Unix timestamp in seconds)",
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "endtime",
+            "in": "query",
+            "required": true,
+            "description": "End time (Unix timestamp in seconds)",
             "schema": {
               "type": "integer",
               "format": "int64"
@@ -112,12 +309,48 @@
           }
         ],
         "responses": {
-          "204": {
-            "description": "Plant deleted",
-            "content": {}
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaybackResponse"
+                }
+              }
+            }
           },
           "400": {
-            "description": "unexpected error",
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
             "content": {
               "application/json": {
                 "schema": {
@@ -130,87 +363,253 @@
       }
     }
   },
-  "webhooks": {
-    "/plant/webhook": {
-      "post": {
-        "description": "Information about a new plant added to the store",
-        "requestBody": {
-          "description": "Plant added to the store",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/NewPlant"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Return a 200 status to indicate that the data was received successfully"
-          }
-        }
-      }
-    }
-  },
   "components": {
     "schemas": {
-      "Plant": {
-        "required": [
-          "name"
-        ],
+      "AuthResponse": {
         "type": "object",
         "properties": {
-          "name": {
-            "description": "The name of the plant",
-            "type": "string"
+          "code": {
+            "type": "integer",
+            "description": "Response code (0 = success)"
           },
-          "tag": {
-            "description": "Tag to specify the type",
-            "type": "string"
-          }
-        }
-      },
-      "NewPlant": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/Plant"
-          },
-          {
-            "required": [
-              "id"
-            ],
+          "record": {
             "type": "object",
             "properties": {
-              "id": {
-                "description": "Identification number of the plant",
+              "access_token": {
+                "type": "string",
+                "description": "Secure token for API authentication (valid for 1 hour)"
+              },
+              "expires_in": {
                 "type": "integer",
-                "format": "int64"
+                "description": "Token validity period in seconds (3600 = 1 hour)"
               }
             }
-          }
-        ]
-      },
-      "Error": {
-        "required": [
-          "error",
-          "message"
-        ],
-        "type": "object",
-        "properties": {
-          "error": {
-            "type": "integer",
-            "format": "int32"
           },
-          "message": {
-            "type": "string"
+          "timestamp": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Unix timestamp"
           }
         }
-      }
-    },
-    "securitySchemes": {
-      "bearerAuth": {
-        "type": "http",
-        "scheme": "bearer"
+      },
+      "Vehicle": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Vehicle UUID"
+          },
+          "imei": {
+            "type": "string",
+            "description": "Device IMEI number"
+          },
+          "name": {
+            "type": "string",
+            "description": "Vehicle name"
+          },
+          "plate_number": {
+            "type": "string",
+            "description": "Vehicle plate number"
+          },
+          "type": {
+            "type": "string",
+            "description": "Vehicle type"
+          },
+          "brand": {
+            "type": "string",
+            "description": "Vehicle brand"
+          },
+          "model": {
+            "type": "string",
+            "description": "Vehicle model"
+          },
+          "year": {
+            "type": "integer",
+            "description": "Vehicle year"
+          },
+          "color": {
+            "type": "string",
+            "description": "Vehicle color"
+          },
+          "status": {
+            "type": "string",
+            "description": "Vehicle status"
+          },
+          "devicename": {
+            "type": "string",
+            "description": "Device name"
+          },
+          "devicetype": {
+            "type": "string",
+            "description": "Device type"
+          },
+          "simcard": {
+            "type": "string",
+            "description": "SIM card number"
+          },
+          "iccid": {
+            "type": "string",
+            "description": "ICCID number"
+          },
+          "image_name": {
+            "type": "string",
+            "description": "Vehicle icon/image filename"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Creation timestamp"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Last update timestamp"
+          }
+        }
+      },
+      "VehicleListResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "description": "Response code (0 = success)"
+          },
+          "record": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Vehicle"
+            }
+          },
+          "cached": {
+            "type": "boolean",
+            "description": "Indicates if response was from cache"
+          },
+          "timestamp": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Unix timestamp"
+          }
+        }
+      },
+      "TrackData": {
+        "type": "object",
+        "properties": {
+          "imei": {
+            "type": "string",
+            "description": "Device IMEI number"
+          },
+          "longitude": {
+            "type": "number",
+            "format": "double",
+            "description": "GPS longitude coordinate"
+          },
+          "latitude": {
+            "type": "number",
+            "format": "double",
+            "description": "GPS latitude coordinate"
+          },
+          "gpstime": {
+            "type": "integer",
+            "format": "int64",
+            "description": "GPS timestamp"
+          },
+          "servertime": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Server timestamp"
+          },
+          "speed": {
+            "type": "number",
+            "description": "Vehicle speed"
+          },
+          "course": {
+            "type": "number",
+            "description": "Vehicle course/direction"
+          },
+          "battery": {
+            "type": "integer",
+            "description": "Battery percentage"
+          },
+          "mileage": {
+            "type": "number",
+            "description": "Total mileage"
+          },
+          "devicename": {
+            "type": "string",
+            "description": "Device name"
+          },
+          "platenumber": {
+            "type": "string",
+            "description": "Vehicle plate number"
+          },
+          "vehicleName": {
+            "type": "string",
+            "description": "Vehicle name"
+          }
+        }
+      },
+      "TrackResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "description": "Response code (0 = success)"
+          },
+          "record": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TrackData"
+            }
+          },
+          "cached": {
+            "type": "boolean",
+            "description": "Indicates if response was from cache"
+          },
+          "timestamp": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Unix timestamp"
+          }
+        }
+      },
+      "PlaybackResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "description": "Response code (0 = success)"
+          },
+          "record": {
+            "type": "string",
+            "description": "Semicolon-separated playback data"
+          },
+          "cached": {
+            "type": "boolean",
+            "description": "Indicates if response was from cache"
+          },
+          "timestamp": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Unix timestamp"
+          }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "required": [
+          "code",
+          "message"
+        ],
+        "properties": {
+          "code": {
+            "type": "integer",
+            "description": "Error code number"
+          },
+          "message": {
+            "type": "string",
+            "description": "Human-readable error message"
+          }
+        }
       }
     }
   }

@@ -1,33 +1,56 @@
 ---
 title: 'Introduction'
-description: 'Example section for showcasing API endpoints'
+description: 'Complete API reference for Fleeticc Open API endpoints'
 ---
 
-<Note>
-  If you're not looking to build API reference documentation, you can delete
-  this section by removing the api-reference folder.
-</Note>
+## Overview
 
-## Welcome
+The Fleeticc Open API provides programmatic access to vehicle tracking data, allowing you to integrate GPS tracking capabilities into your applications. All endpoints require authentication using access tokens obtained through the Authorization endpoint.
 
-There are two ways to build API documentation: [OpenAPI](https://mintlify.com/docs/api-playground/openapi/setup) and [MDX components](https://mintlify.com/docs/api-playground/mdx/configuration). For the starter kit, we are using the following OpenAPI specification.
+<Warning>
+  API access is restricted to paid users only (Basic and Premium plans). Free plan users cannot access any Open API endpoints.
+</Warning>
 
-<Card
-  title="Plant Store Endpoints"
-  icon="leaf"
-  href="https://github.com/mintlify/starter/blob/main/api-reference/openapi.json"
->
-  View the OpenAPI specification file
-</Card>
+## Base URL
 
-## Authentication
+```
+https://bounpkufhwhptqbktpfl.supabase.co/functions/v1
+```
 
-All API endpoints are authenticated using Bearer tokens and picked up from the specification file.
+## Authentication Flow
+
+1. Use your Fleeticc account email and password (no separate API password needed)
+2. Generate a signature using MD5 hash algorithm: `md5(md5(password) + time)`
+3. Request an access token from the Authorization endpoint with password and signature
+4. Use the access token for all subsequent API requests
+5. Access tokens expire after 1 hour (3600 seconds)
+
+## Rate Limiting
+
+Rate limits are enforced per user to ensure fair usage:
+
+- **Authorization**: 5 requests/minute per account
+- **List Vehicles**: 10 requests/minute per user
+- **Playback**: 5 requests/minute per user
+- **Track**: 6 requests/minute per user (600 global)
+
+## Error Handling
+
+All endpoints return JSON responses with a consistent error format:
 
 ```json
-"security": [
-  {
-    "bearerAuth": []
-  }
-]
+{
+  "code": 10005,
+  "message": "Missing required parameter"
+}
 ```
+
+## Subscription Requirements
+
+<Warning>
+  All Open API endpoints require an active Basic or Premium subscription. Free plan users will receive error code 10007 (Permission denied).
+</Warning>
+
+- ✅ **Basic Plan**: Full API access
+- ✅ **Premium Plan**: Full API access
+- ❌ **Free Plan**: No API access

@@ -1,43 +1,38 @@
-# Mintlify Starter Kit
+# Fleeticc API Documentation
 
-Use the starter kit to get your docs deployed and ready to customize.
+This repository contains the documentation for the Fleeticc Open API.
 
-Click the green **Use this template** button at the top of this repo to copy the Mintlify starter kit. The starter kit contains examples with
+## Getting Started
 
-- Guide pages
-- Navigation
-- Customizations
-- API reference pages
-- Use of popular components
+The Fleeticc Open API provides programmatic access to vehicle tracking data, allowing you to integrate GPS tracking capabilities into your applications.
 
-**[Follow the full quickstart guide](https://starter.mintlify.com/quickstart)**
+### Prerequisites
 
-## Development
+- Active Fleeticc account (Basic or Premium plan)
+- API access tokens obtained through authentication
 
-Install the [Mintlify CLI](https://www.npmjs.com/package/mint) to preview your documentation changes locally. To install, use the following command:
+### Base URL
 
 ```
-npm i -g mint
+https://bounpkufhwhptqbktpfl.supabase.co/functions/v1
 ```
 
-Run the following command at the root of your documentation, where your `docs.json` is located:
+## Available Endpoints
 
-```
-mint dev
-```
+- **Authentication** - Get access tokens for API requests
+- **List Vehicles** - Retrieve all vehicles in your account
+- **Track** - Get real-time GPS tracking data
+- **Playback** - Retrieve historical tracking data
+- **Error Codes** - Comprehensive error code reference
 
-View your local preview at `http://localhost:3000`.
+## Documentation
 
-## Publishing changes
+Visit our full API documentation at [https://fleeticc.com/docs](https://fleeticc.com/docs)
 
-Install our GitHub app from your [dashboard](https://dashboard.mintlify.com/settings/organization/github-app) to propagate changes from your repo to your deployment. Changes are deployed to production automatically after pushing to the default branch.
+## Support
 
-## Need help?
+For support, please contact us at [info@fleeticc.com](mailto:info@fleeticc.com)
 
-### Troubleshooting
+## License
 
-- If your dev environment isn't running: Run `mint update` to ensure you have the most recent version of the CLI.
-- If a page loads as a 404: Make sure you are running in a folder with a valid `docs.json`.
-
-### Resources
-- [Mintlify documentation](https://mintlify.com/docs)
+Copyright © 2024 Fleeticc. All rights reserved.

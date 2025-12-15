@@ -1,0 +1,112 @@
+---
+title: 'Playback'
+openapi: 'GET /open-api-playback'
+---
+
+Get historical GPS tracking data for a device within a specified time period. Returns playback data in semicolon-separated format matching Chinese API.
+
+## Request
+
+<ParamField query="access_token" type="string" required>
+  API access token from authorization endpoint
+</ParamField>
+
+<ParamField query="imei" type="string" required>
+  Single IMEI to get playback data for
+</ParamField>
+
+<ParamField query="begintime" type="long" required>
+  Begin time (Unix timestamp in seconds)
+</ParamField>
+
+<ParamField query="endtime" type="long" required>
+  End time (Unix timestamp in seconds)
+</ParamField>
+
+## Request Example
+
+```bash
+curl "https://bounpkufhwhptqbktpfl.supabase.co/functions/v1/open-api-playback?access_token=example_access_token_12345&imei=123456789012345&begintime=1609459200&endtime=1612051200"
+```
+
+## Response
+
+<ResponseField name="code" type="number">
+  Response code (0 = success)
+</ResponseField>
+
+<ResponseField name="record" type="string">
+  Semicolon-separated playback data. Each point format: "longitude,latitude,gpstime,speed,course"
+</ResponseField>
+
+<ResponseField name="cached" type="boolean">
+  Indicates if response was from cache
+</ResponseField>
+
+<ResponseField name="timestamp" type="number">
+  Unix timestamp
+</ResponseField>
+
+### Success Response
+
+```json
+{
+  "code": 0,
+  "record": "0.0,0.0,1609459200,0,0;0.0,0.0,1609459260,0,0;0.0,0.0,1609459320,0,0",
+  "cached": false,
+  "timestamp": 1609459200
+}
+```
+
+## Record Format
+
+Each point: `"longitude,latitude,gpstime,speed,course"`
+
+Multiple points: separated by semicolon `";"`
+
+### Example Record Breakdown
+
+```
+Point 1: longitude=0.0, latitude=0.0, gpstime=1609459200, speed=0, course=0
+Point 2: longitude=0.0, latitude=0.0, gpstime=1609459260, speed=0, course=0
+Point 3: longitude=0.0, latitude=0.0, gpstime=1609459320, speed=0, course=0
+```
+
+## Rate Limits
+
+5 requests per minute per user. Minimum interval: 12 seconds between requests. Cache TTL: 5 minutes (historical data, rarely changes).
+
+## Error Codes
+
+<ErrorField code="10005" status="400">
+  Missing required parameters - Missing access_token, imei, begintime, or endtime
+</ErrorField>
+
+<ErrorField code="10006" status="400">
+  Invalid time parameters - begintime and endtime must be positive Unix timestamps
+</ErrorField>
+
+<ErrorField code="10012" status="401">
+  Invalid or expired access token - Token expired or invalid
+</ErrorField>
+
+<ErrorField code="10007" status="403">
+  Permission denied - API access is only available for premium/pro users with active subscriptions
+</ErrorField>
+
+<ErrorField code="10013" status="403">
+  IMEI does not belong to your account - User requests IMEI they don't own
+</ErrorField>
+
+<ErrorField code="10009" status="429">
+  Rate limit exceeded - Maximum 5 requests per minute
+</ErrorField>
+
+<ErrorField code="20023" status="200">
+  No playback data found - No GPS data for IMEI in time range
+</ErrorField>
+
+<ErrorField code="10000" status="500">
+  Internal server error - System error occurred
+</ErrorField>
+

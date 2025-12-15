@@ -1,97 +1,74 @@
 ---
-title: "Introduction"
-description: "Welcome to the new home for your documentation"
+title: "Fleeticc API Documentation"
+description: "Welcome to the Fleeticc Open API documentation"
 ---
 
-## Setting up
+## Getting Started
 
-Get your documentation site up and running in minutes.
+Get started with the Fleeticc Open API to integrate GPS tracking capabilities into your applications.
 
 <Card
-  title="Start here"
+  title="API Introduction"
   icon="rocket"
-  href="/quickstart"
+  href="/api-reference/introduction"
   horizontal
 >
-  Follow our three step quickstart guide.
+  Learn about authentication, rate limits, and subscription requirements.
 </Card>
 
-## Make it yours
-
-Design a docs site that looks great and empowers your users.
+## Quick Links
 
 <Columns cols={2}>
   <Card
-    title="Edit locally"
-    icon="pen-to-square"
-    href="/development"
+    title="Authentication"
+    icon="key"
+    href="/api-reference/endpoint/authentication"
   >
-    Edit your docs locally and preview them in real time.
+    Get access tokens for API requests
   </Card>
   <Card
-    title="Customize your site"
-    icon="palette"
-    href="/essentials/settings"
+    title="List Vehicles"
+    icon="car"
+    href="/api-reference/endpoint/list-vehicles"
   >
-    Customize the design and colors of your site to match your brand.
+    Retrieve all vehicles in your account
   </Card>
-    <Card
-    title="Set up navigation"
+  <Card
+    title="Track"
     icon="map"
-    href="/essentials/navigation"
+    href="/api-reference/endpoint/track"
   >
-    Organize your docs to help users find what they need and succeed with your product.
+    Get real-time GPS tracking data
   </Card>
   <Card
-    title="API documentation"
-    icon="terminal"
-    href="/api-reference/introduction"
+    title="Playback"
+    icon="clock"
+    href="/api-reference/endpoint/playback"
   >
-    Auto-generate API documentation from OpenAPI specifications.
+    Retrieve historical tracking data
   </Card>
 </Columns>
 
-## Create beautiful pages
+## API Endpoints
 
-Everything you need to create world-class documentation.
+All endpoints require authentication and are available for Basic and Premium plan subscribers.
 
-<Columns cols={2}>
-  <Card
-    title="Write with MDX"
-    icon="pen-fancy"
-    href="/essentials/markdown"
-  >
-    Use MDX to style your docs pages.
-  </Card>
-  <Card
-    title="Code samples"
-    icon="code"
-    href="/essentials/code"
-  >
-    Add sample code to demonstrate how to use your product.
-  </Card>
-  <Card
-    title="Images"
-    icon="image"
-    href="/essentials/images"
-  >
-    Display images and other media.
-  </Card>
-  <Card
-    title="Reusable snippets"
-    icon="recycle"
-    href="/essentials/reusable-snippets"
-  >
-    Write once and reuse across your docs.
-  </Card>
-</Columns>
+<Warning>
+  Free plan users cannot access any Open API endpoints. Upgrade to Basic or Premium to get started.
+</Warning>
 
-## Need inspiration?
+## Base URL
+
+```
+https://bounpkufhwhptqbktpfl.supabase.co/functions/v1
+```
+
+## Need Help?
 
 <Card
-  title="See complete examples"
-  icon="stars"
-  href="https://mintlify.com/customers"
+  title="Contact Support"
+  icon="envelope"
+  href="https://fleeticc.com/contact"
 >
-  Browse our showcase of exceptional documentation sites.
+  Get help from our support team
 </Card>

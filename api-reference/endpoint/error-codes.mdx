@@ -1,0 +1,109 @@
+---
+title: 'Error Codes'
+description: 'Comprehensive reference of all error codes returned by the API endpoints'
+---
+
+Comprehensive reference of all error codes returned by the API endpoints.
+
+## Error Code Reference
+
+<ErrorField code="0" status="200">
+  Success - Request completed successfully
+</ErrorField>
+
+<ErrorField code="10000" status="500">
+  Internal server error - System error occurred
+</ErrorField>
+
+<ErrorField code="10005" status="400">
+  Missing required parameter - One or more required parameters are missing. Specific parameters vary by endpoint:
+  - Authentication: Missing time, account, password, or signature parameter
+  - List Vehicles: Missing access_token parameter
+  - Track: Missing access_token and imeis
+  - Playback: Missing access_token, imei, begintime, or endtime
+</ErrorField>
+
+<ErrorField code="10006" status="400">
+  Parameter out of range - Parameter value is outside valid range. Can occur as:
+  - Too many IMEIs: Maximum 100 IMEIs per request (Track endpoint)
+  - Invalid time parameters: begintime and endtime must be positive Unix timestamps (Playback endpoint)
+</ErrorField>
+
+<ErrorField code="10007" status="403">
+  Permission denied - API access is only available for premium/pro users with active subscriptions. Free plan users cannot access any Open API endpoints.
+</ErrorField>
+
+<ErrorField code="10009" status="429">
+  Request too frequency - Rate limit exceeded. Specific limits vary by endpoint:
+  - Authentication: 5 requests/minute per account
+  - List Vehicles: Maximum 10 requests per minute
+  - Track: Maximum 6 requests per minute
+  - Playback: Maximum 5 requests per minute
+</ErrorField>
+
+<ErrorField code="10010" status="401">
+  Access token doesn't exist - Token not found in database
+</ErrorField>
+
+<ErrorField code="10011" status="401">
+  Access token invalid - Token malformed or invalid
+</ErrorField>
+
+<ErrorField code="10012" status="401">
+  Access token out of date - Token has expired. Access tokens are valid for 1 hour (3600 seconds). Request a new token from the Authorization endpoint.
+</ErrorField>
+
+<ErrorField code="10013" status="403">
+  IMEI not authorized - IMEI does not belong to user's account. One or more IMEIs in the request do not belong to your account.
+</ErrorField>
+
+<ErrorField code="10014" status="400">
+  Request time error - Time parameter not within 5 minutes of current time. The time parameter in authentication requests must be within 5 minutes of the current server time.
+</ErrorField>
+
+<ErrorField code="20001" status="401">
+  Account or password error - Invalid account, password, or signature. Can occur as:
+  - Invalid account or password: Email doesn't exist or password is incorrect
+  - Invalid signature: Signature doesn't match calculated value. Check password and time parameter. Ensure signature is calculated as md5(md5(password) + time)
+</ErrorField>
+
+<ErrorField code="20023" status="200">
+  No playback data found - No GPS data for IMEI in specified time range. The requested IMEI has no tracking data available for the given time period.
+</ErrorField>
+
+## Error Response Format
+
+All endpoints return errors in a consistent JSON format:
+
+```json
+{
+  "code": 10005,
+  "message": "Missing required parameter"
+}
+```
+
+## Common Error Scenarios
+
+### Authentication Errors
+
+- **10014**: Check that your `time` parameter is within 5 minutes of the current time
+- **20001**: Verify your email, password, and signature calculation (md5(md5(password) + time))
+- **10007**: Ensure you have an active Basic or Premium subscription
+
+### Token Errors
+
+- **10010, 10011, 10012**: Your access token is invalid or expired. Request a new token from the Authorization endpoint
+- Tokens expire after 1 hour (3600 seconds)
+
+### Rate Limiting
+
+- **10009**: You've exceeded the rate limit for the endpoint. Wait before retrying:
+  - Authentication: 12 seconds minimum between attempts
+  - List Vehicles: 6 seconds minimum between requests
+  - Track: 10 seconds minimum between requests
+  - Playback: 12 seconds minimum between requests
+
+### Permission Errors
+
+- **10007**: Upgrade to Basic or Premium plan to access the API
+- **10013**: Verify that all IMEIs in your request belong to your account

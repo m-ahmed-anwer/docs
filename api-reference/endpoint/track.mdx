@@ -1,0 +1,249 @@
+---
+title: 'Track'
+openapi: 'GET /open-api-track'
+---
+
+Get the latest coordinate data for tracking devices (vehicles). Returns real-time GPS tracking information for specified IMEIs.
+
+## Request
+
+<ParamField query="access_token" type="string" required>
+  API access token from authorization endpoint
+</ParamField>
+
+<ParamField query="imeis" type="string" required>
+  Comma-separated list of IMEIs (max 100)
+</ParamField>
+
+## Request Example
+
+```bash
+curl "https://bounpkufhwhptqbktpfl.supabase.co/functions/v1/open-api-track?access_token=example_access_token_12345&imeis=123456789012345,987654321098765"
+```
+
+## Response
+
+<ResponseField name="code" type="number">
+  Response code (0 = success)
+</ResponseField>
+
+<ResponseField name="record" type="array">
+  Array of tracking data objects
+  <ResponseField name="imei" type="string">
+    Device IMEI number
+  </ResponseField>
+  <ResponseField name="longitude" type="number">
+    GPS longitude coordinate
+  </ResponseField>
+  <ResponseField name="latitude" type="number">
+    GPS latitude coordinate
+  </ResponseField>
+  <ResponseField name="gpstime" type="number">
+    GPS timestamp (Unix timestamp in seconds)
+  </ResponseField>
+  <ResponseField name="servertime" type="number">
+    Server timestamp (Unix timestamp in seconds)
+  </ResponseField>
+  <ResponseField name="hearttime" type="number">
+    Heartbeat timestamp (Unix timestamp in seconds)
+  </ResponseField>
+  <ResponseField name="systemtime" type="number">
+    System timestamp (Unix timestamp in seconds)
+  </ResponseField>
+  <ResponseField name="speed" type="number">
+    Vehicle speed
+  </ResponseField>
+  <ResponseField name="course" type="number">
+    Vehicle course/direction
+  </ResponseField>
+  <ResponseField name="acctime" type="number">
+    ACC on time (seconds)
+  </ResponseField>
+  <ResponseField name="accstatus" type="number">
+    ACC status
+  </ResponseField>
+  <ResponseField name="doorstatus" type="number">
+    Door status
+  </ResponseField>
+  <ResponseField name="chargestatus" type="number">
+    Charge status
+  </ResponseField>
+  <ResponseField name="battery" type="number">
+    Battery percentage
+  </ResponseField>
+  <ResponseField name="mileage" type="number">
+    Total mileage
+  </ResponseField>
+  <ResponseField name="todaymileage" type="number">
+    Today's mileage
+  </ResponseField>
+  <ResponseField name="externalpower" type="number">
+    External power (nullable)
+  </ResponseField>
+  <ResponseField name="fuel" type="number">
+    Fuel level (nullable)
+  </ResponseField>
+  <ResponseField name="fueltime" type="number">
+    Fuel timestamp
+  </ResponseField>
+  <ResponseField name="temperature" type="array">
+    Temperature array
+  </ResponseField>
+  <ResponseField name="temperaturetime" type="number">
+    Temperature timestamp
+  </ResponseField>
+  <ResponseField name="oilpowerstatus" type="number">
+    Oil power status
+  </ResponseField>
+  <ResponseField name="defencestatus" type="number">
+    Defence status
+  </ResponseField>
+  <ResponseField name="datastatus" type="number">
+    Data status
+  </ResponseField>
+  <ResponseField name="devicename" type="string">
+    Device name
+  </ResponseField>
+  <ResponseField name="devicetype" type="string">
+    Device type
+  </ResponseField>
+  <ResponseField name="platenumber" type="string">
+    Vehicle plate number
+  </ResponseField>
+  <ResponseField name="simcard" type="string">
+    SIM card number (nullable)
+  </ResponseField>
+  <ResponseField name="iccid" type="string">
+    ICCID number (nullable)
+  </ResponseField>
+  <ResponseField name="imageName" type="string">
+    Vehicle icon/image filename
+  </ResponseField>
+  <ResponseField name="vehicleName" type="string">
+    Vehicle name
+  </ResponseField>
+  <ResponseField name="vehicleType" type="string">
+    Vehicle type (nullable)
+  </ResponseField>
+  <ResponseField name="vehicleBrand" type="string">
+    Vehicle brand
+  </ResponseField>
+  <ResponseField name="vehicleModel" type="string">
+    Vehicle model
+  </ResponseField>
+  <ResponseField name="vehicleYear" type="number">
+    Vehicle year
+  </ResponseField>
+  <ResponseField name="vehicleColor" type="string">
+    Vehicle color
+  </ResponseField>
+  <ResponseField name="vehicleFuelType" type="string">
+    Vehicle fuel type
+  </ResponseField>
+  <ResponseField name="vehicleOdometer" type="number">
+    Vehicle odometer reading (nullable)
+  </ResponseField>
+  <ResponseField name="vehicleStatus" type="string">
+    Vehicle status (nullable)
+  </ResponseField>
+  <ResponseField name="vehicleNotes" type="string">
+    Vehicle notes (nullable)
+  </ResponseField>
+</ResponseField>
+
+<ResponseField name="cached" type="boolean">
+  Indicates if response was from cache
+</ResponseField>
+
+<ResponseField name="timestamp" type="number">
+  Unix timestamp
+</ResponseField>
+
+### Success Response
+
+```json
+{
+  "code": 0,
+  "record": [
+    {
+      "imei": "123456789012345",
+      "servertime": 1609459200,
+      "gpstime": 1609459100,
+      "hearttime": 1609459150,
+      "systemtime": 1609459050,
+      "longitude": 0.0,
+      "latitude": 0.0,
+      "course": 0,
+      "speed": 0,
+      "acctime": 0,
+      "accstatus": 0,
+      "doorstatus": -1,
+      "chargestatus": 1,
+      "oilpowerstatus": 0,
+      "defencestatus": 1,
+      "datastatus": 2,
+      "battery": 100,
+      "mileage": 0,
+      "todaymileage": 0,
+      "externalpower": null,
+      "fuel": null,
+      "fueltime": 0,
+      "temperature": [],
+      "temperaturetime": 0,
+      "devicename": "Example Device",
+      "devicetype": "ExampleType",
+      "platenumber": "ABC-123",
+      "simcard": null,
+      "iccid": null,
+      "imageName": "v1.png",
+      "vehicleName": "Example Vehicle",
+      "vehicleType": null,
+      "vehicleBrand": "ExampleBrand",
+      "vehicleModel": "ExampleModel",
+      "vehicleYear": 2020,
+      "vehicleColor": "Blue",
+      "vehicleFuelType": "Gasoline",
+      "vehicleOdometer": null,
+      "vehicleStatus": null,
+      "vehicleNotes": null
+    }
+  ],
+  "cached": false,
+  "timestamp": 1609459200
+}
+```
+
+## Rate Limits
+
+6 requests per minute per user (10s polling), 600 global requests per minute. Minimum interval: 10 seconds between requests. Cache TTL: 10 seconds (optimized for 10s polling).
+
+## Error Codes
+
+<ErrorField code="10005" status="400">
+  Missing required parameters - Missing access_token and imeis
+</ErrorField>
+
+<ErrorField code="10006" status="400">
+  Too many IMEIs - Maximum 100 IMEIs per request
+</ErrorField>
+
+<ErrorField code="10012" status="401">
+  Invalid or expired access token - Token expired or invalid
+</ErrorField>
+
+<ErrorField code="10007" status="403">
+  Permission denied - API access is only available for premium/pro users with active subscriptions
+</ErrorField>
+
+<ErrorField code="10013" status="403">
+  IMEI not authorized - One or more IMEIs do not belong to your account
+</ErrorField>
+
+<ErrorField code="10009" status="429">
+  Rate limit exceeded - Maximum 6 requests per minute
+</ErrorField>
+
+<ErrorField code="10000" status="500">
+  Internal server error - System error occurred
+</ErrorField>
+

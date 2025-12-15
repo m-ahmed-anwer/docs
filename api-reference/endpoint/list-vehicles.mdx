@@ -1,0 +1,172 @@
+---
+title: 'List Vehicles'
+openapi: 'GET /open-api-list-vehicles'
+---
+
+Get a list of all vehicles (devices) associated with the authenticated user's account. Returns complete vehicle information including IMEI, name, plate number, and all metadata.
+
+## Request
+
+<ParamField query="access_token" type="string" required>
+  API access token from authorization endpoint
+</ParamField>
+
+## Request Example
+
+```bash
+curl "https://bounpkufhwhptqbktpfl.supabase.co/functions/v1/open-api-list-vehicles?access_token=example_access_token_12345"
+```
+
+## Response
+
+<ResponseField name="code" type="number">
+  Response code (0 = success)
+</ResponseField>
+
+<ResponseField name="record" type="array">
+  Array of vehicle objects
+  <ResponseField name="id" type="string">
+    Vehicle UUID
+  </ResponseField>
+  <ResponseField name="imei" type="string">
+    Device IMEI number
+  </ResponseField>
+  <ResponseField name="name" type="string">
+    Vehicle name
+  </ResponseField>
+  <ResponseField name="plate_number" type="string">
+    Vehicle plate number
+  </ResponseField>
+  <ResponseField name="type" type="string">
+    Vehicle type (e.g., "Car")
+  </ResponseField>
+  <ResponseField name="brand" type="string">
+    Vehicle brand
+  </ResponseField>
+  <ResponseField name="model" type="string">
+    Vehicle model
+  </ResponseField>
+  <ResponseField name="year" type="number">
+    Vehicle year
+  </ResponseField>
+  <ResponseField name="color" type="string">
+    Vehicle color
+  </ResponseField>
+  <ResponseField name="status" type="string">
+    Vehicle status (e.g., "active")
+  </ResponseField>
+  <ResponseField name="notes" type="string">
+    Vehicle notes
+  </ResponseField>
+  <ResponseField name="fuel_type" type="string">
+    Vehicle fuel type (e.g., "Gasoline")
+  </ResponseField>
+  <ResponseField name="odometer" type="number">
+    Vehicle odometer reading
+  </ResponseField>
+  <ResponseField name="devicename" type="string">
+    Device name
+  </ResponseField>
+  <ResponseField name="devicetype" type="string">
+    Device type
+  </ResponseField>
+  <ResponseField name="simcard" type="string">
+    SIM card number
+  </ResponseField>
+  <ResponseField name="iccid" type="string">
+    ICCID number
+  </ResponseField>
+  <ResponseField name="image_name" type="string">
+    Vehicle icon/image filename
+  </ResponseField>
+  <ResponseField name="created_at" type="string">
+    Creation timestamp (ISO 8601)
+  </ResponseField>
+  <ResponseField name="updated_at" type="string">
+    Last update timestamp (ISO 8601)
+  </ResponseField>
+</ResponseField>
+
+<ResponseField name="cached" type="boolean">
+  Indicates if response was from cache
+</ResponseField>
+
+<ResponseField name="timestamp" type="number">
+  Unix timestamp
+</ResponseField>
+
+### Success Response
+
+```json
+{
+  "code": 0,
+  "record": [
+    {
+      "id": "example-uuid-1234-5678-9012-345678901234",
+      "imei": "123456789012345",
+      "name": "Example Vehicle",
+      "plate_number": "ABC-123",
+      "type": "Car",
+      "brand": "ExampleBrand",
+      "model": "ExampleModel",
+      "year": 2020,
+      "color": "Blue",
+      "status": "active",
+      "notes": "Example vehicle",
+      "fuel_type": "Gasoline",
+      "odometer": 50000,
+      "devicename": "Example Device",
+      "devicetype": "GPS Tracker",
+      "simcard": "1234567890",
+      "iccid": "ICCID123",
+      "image_name": "v1.png",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  ],
+  "cached": false,
+  "timestamp": 1609459200
+}
+```
+
+## Response Headers
+
+- `X-Cached`: true/false (indicates if response was from cache)
+- `X-RateLimit-Limit`: 10 (max requests per minute)
+- `X-RateLimit-Remaining`: Remaining requests
+- `X-RateLimit-Reset`: Reset timestamp
+
+## Rate Limits
+
+10 requests per minute per user. Minimum interval: 6 seconds between requests. Cache TTL: 60 seconds.
+
+## Error Codes
+
+<ErrorField code="10005" status="400">
+  Missing required parameter - Missing access_token parameter
+</ErrorField>
+
+<ErrorField code="10010" status="401">
+  Invalid or expired access token - Token not found in database
+</ErrorField>
+
+<ErrorField code="10011" status="401">
+  Invalid or expired access token - Token malformed
+</ErrorField>
+
+<ErrorField code="10012" status="401">
+  Invalid or expired access token - Token expired
+</ErrorField>
+
+<ErrorField code="10007" status="403">
+  Permission denied - API access is only available for premium/pro users with active subscriptions
+</ErrorField>
+
+<ErrorField code="10009" status="429">
+  Rate limit exceeded - Maximum 10 requests per minute
+</ErrorField>
+
+<ErrorField code="10000" status="500">
+  Internal server error - System error occurred
+</ErrorField>
+

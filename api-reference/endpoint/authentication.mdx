@@ -1,0 +1,112 @@
+---
+title: 'Authentication'
+openapi: 'GET /open-api-authorization'
+---
+
+Get an access token for making authenticated API requests. Access tokens are valid for 1 hour (3600 seconds). When a new token is requested, the old one is invalidated immediately.
+
+## Request
+
+<ParamField query="time" type="long" required>
+  Unix timestamp in seconds (when request is sent)
+</ParamField>
+
+<ParamField query="account" type="string" required>
+  User email address
+</ParamField>
+
+<ParamField query="password" type="string" required>
+  Your Fleeticc account password
+</ParamField>
+
+<ParamField query="signature" type="string" required>
+  MD5 hash = md5(md5(password) + time)
+</ParamField>
+
+## Signature Calculation
+
+1. Calculate `md5(password)` → password_hash
+2. Calculate `md5(password_hash + time)` → signature
+3. Use lowercase 32-character hex string
+
+### Example
+
+```javascript
+// password = "ExamplePassword123" (your Fleeticc account password)
+// time = 1609459200
+// md5("ExamplePassword123") = "example123..." (example hash)
+// md5("example123..." + "1609459200") = "example1234567890abcdef1234567890ab"
+```
+
+## Request Example
+
+```bash
+curl "https://bounpkufhwhptqbktpfl.supabase.co/functions/v1/open-api-authorization?time=1609459200&account=example@example.com&password=ExamplePassword123&signature=example1234567890abcdef1234567890ab"
+```
+
+## Response
+
+<ResponseField name="code" type="number">
+  Response code (0 = success)
+</ResponseField>
+
+<ResponseField name="record" type="object">
+  <ResponseField name="access_token" type="string">
+    Secure token for API authentication (valid for 1 hour)
+  </ResponseField>
+  <ResponseField name="expires_in" type="number">
+    Token validity period in seconds (3600 = 1 hour)
+  </ResponseField>
+</ResponseField>
+
+<ResponseField name="timestamp" type="number">
+  Unix timestamp
+</ResponseField>
+
+### Success Response
+
+```json
+{
+  "code": 0,
+  "record": {
+    "access_token": "example_jwt_token_12345abcdefghijklmnopqrstuvwxyz",
+    "expires_in": 3600
+  },
+  "timestamp": 1609459200
+}
+```
+
+## Rate Limits
+
+5 authentication attempts per minute per account. Minimum interval: 12 seconds between attempts.
+
+## Error Codes
+
+<ErrorField code="10005" status="400">
+  Missing required parameters (time, account, password, or signature)
+</ErrorField>
+
+<ErrorField code="10014" status="400">
+  Invalid time parameter - Time must be within 5 minutes of current time
+</ErrorField>
+
+<ErrorField code="20001" status="401">
+  Invalid account or password - Email doesn't exist or password is incorrect
+</ErrorField>
+
+<ErrorField code="20001" status="401">
+  Invalid signature - Signature doesn't match calculated value. Check password and time parameter.
+</ErrorField>
+
+<ErrorField code="10007" status="403">
+  Permission denied - API access is only available for premium/pro users with active subscriptions
+</ErrorField>
+
+<ErrorField code="10009" status="429">
+  Too many authentication attempts - Rate limit exceeded. Please wait before retrying
+</ErrorField>
+
+<ErrorField code="10000" status="500">
+  Internal server error - System error occurred
+</ErrorField>
+
