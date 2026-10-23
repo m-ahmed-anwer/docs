@@ -17,6 +17,9 @@ The Partner API lets your own systems read fleet GPS data from Fleeticc — with
   <Card title="History" icon="clock" href="/api-reference/endpoint/playback">
     Replay a trip, or look up a location at a point in time
   </Card>
+  <Card title="Webhooks" icon="bell" href="/api-reference/endpoint/webhooks">
+    Get alert and geofence events pushed to your HTTPS URL
+  </Card>
   <Card title="Authentication" icon="key" href="/api-reference/endpoint/authentication">
     How to sign requests securely
   </Card>
@@ -33,12 +36,13 @@ All partner endpoints start with `/api/partner/v1/…`
 ## Before you start
 
 1. Ask Fleeticc to **enable** the Partner API on your account  
-2. As the **account owner**, open the Fleeticc website → account menu → **Partner API**  
-3. Generate your **API key** and **secret** (the secret is shown only once)  
-4. Follow the [quick start](/api-reference/introduction)
+2. (Optional) Ask Fleeticc to **enable webhooks** for alert + geofence push  
+3. As the **account owner**, open the Fleeticc website → account menu → **Partner API**  
+4. Generate your **API key** and **secret** (the secret is shown only once)  
+5. Follow the [quick start](/api-reference/introduction)
 
 <Note>
-  Access is off by default. The Partner API is a **paid add-on** with extra charges on top of your normal Fleeticc subscription. Email [info@fleeticc.com](mailto:info@fleeticc.com) to request enablement and pricing. Only the account owner can create or rotate keys — team / sub-account users cannot.
+  Access is off by default. The Partner API is a **paid add-on** with extra charges on top of your normal Fleeticc subscription. Email [info@fleeticc.com](mailto:info@fleeticc.com) to request enablement and pricing. Only the account owner can create or rotate keys and webhooks — team / sub-account users cannot.
 </Note>
 
 ## Need help?

@@ -20,7 +20,13 @@ Errors look like this:
 | `PARTNER_AUTH_TIMESTAMP_SKEW` | 401 | Clock too far from server time |
 | `PARTNER_AUTH_INVALID` | 401 | Bad key or bad signature |
 | `PARTNER_EXTERNAL_API_DISABLED` | 403 | Partner API not enabled for this account |
+| `PARTNER_WEBHOOKS_DISABLED` | 403 | Partner webhooks not enabled for this account |
+| `PARTNER_WEBHOOK_NOT_FOUND` | 404 | Webhook endpoint not found |
+| `PARTNER_WEBHOOK_INVALID_URL` | 400 | Webhook URL must be public HTTPS |
+| `PARTNER_WEBHOOK_LIMIT` | 400 | Already have an active webhook |
+| `PARTNER_WEBHOOK_INACTIVE` | 400 | Webhook is disabled |
 | `PARTNER_QUERY_INVALID` | 400 | History needs `from`+`to`, or `at` |
+
 | `VEHICLE_NOT_FOUND` | 404 | Vehicle not on your account |
 | `TRACK_IMEIS_INVALID` | 400 | Bad or empty IMEI list |
 | `DEVICE_NOT_CONNECTED` | 404 | No GPS history available for that device |

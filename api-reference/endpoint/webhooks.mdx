@@ -1,0 +1,78 @@
+---
+title: "Webhooks"
+description: "Receive alert and geofence events as signed HTTPS POSTs"
+---
+
+Partner webhooks push **alerts** and **geofence** events to your HTTPS endpoint. Live GPS is not pushed — use [Track](/api-reference/endpoint/track) or the SSE stream instead.
+
+## Enable
+
+1. Fleeticc enables **Partner API** on your account
+2. Fleeticc enables **Partner webhooks** (separate admin toggle — both required)
+3. Owner opens the website → **Partner API** → **Webhooks**
+4. Register an HTTPS callback URL and choose events:
+   - **Alerts** — SOS, overspeed, ignition, power cut, and other non-geofence alerts
+   - **Geofence** — enter, exit, geofence speeding
+5. Copy the signing secret once (shown only at create / rotate)
+
+## Delivery
+
+Fleeticc POSTs JSON to your URL when a matching event fires for one of your vehicles.
+
+### Headers
+
+| Header | Meaning |
+|--------|---------|
+| `Content-Type` | `application/json` |
+| `X-Fleeticc-Timestamp` | Unix time (seconds) when the POST was signed |
+| `X-Fleeticc-Signature` | Hex HMAC-SHA256 of `` `${timestamp}.${rawBody}` `` using your webhook secret |
+| `X-Fleeticc-Event-Id` | Stable event id (idempotent retries reuse the same id) |
+| `X-Fleeticc-Event-Type` | Same as body `type` |
+
+### Body shape
+
+```json
+{
+  "id": "evt_…",
+  "type": "GEOFENCE_ENTER",
+  "imei": "860000000000001",
+  "vehicleId": "…",
+  "vehicleName": "Truck 12",
+  "occurredAt": "2026-10-23T09:30:00.000Z",
+  "payload": {
+    "title": "Geofence Entered",
+    "body": "Truck 12 entered a geofence zone.",
+    "speedKmh": 32
+  }
+}
+```
+
+`type` is a Fleeticc `AlertType` string (for example `SOS`, `OVERSPEED`, `ENGINE_ON`, `GEOFENCE_EXIT`) or `webhook.test` for the dashboard test ping.
+
+### Verify the signature (Node)
+
+```js
+import { createHmac, timingSafeEqual } from "crypto";
+
+function verifyFleeticcWebhook({ secret, timestamp, rawBody, signature }) {
+  const expected = createHmac("sha256", secret)
+    .update(`${timestamp}.${rawBody}`)
+    .digest("hex");
+  const a = Buffer.from(expected, "hex");
+  const b = Buffer.from(signature, "hex");
+  if (a.length !== b.length) return false;
+  return timingSafeEqual(a, b);
+}
+```
+
+Reject requests whose timestamp is more than a few minutes from your clock, and respond with `2xx` quickly. Non-2xx responses are retried with exponential backoff.
+
+## Test
+
+Use **Send test** on the Partner API page. You receive `type: "webhook.test"` with the same signature headers.
+
+## Limits
+
+- One active webhook URL per account (v1)
+- Alerts + geofence only (no live position webhooks)
+- HTTPS public URLs only (private/localhost/metadata hosts blocked; DNS is resolved at delivery and private resolutions are rejected)
