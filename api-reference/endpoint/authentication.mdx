@@ -1,93 +1,86 @@
 ---
-title: 'Authentication'
-description: 'HMAC-SHA256 signing for Partner API requests on api.fleeticc.com'
+title: "Authentication"
+description: "Sign Partner API requests with your API key and secret"
 ---
 
-Every Partner API request must include three headers. There is **no** login password or JWT for partners.
+The Partner API does not use email/password login. You authenticate with an **API key** and a **request signature**.
 
-## Headers
+## Headers on every request
 
-| Header | Description |
-|--------|-------------|
-| `X-Api-Key` | Public key id (`pk_…`) issued by Fleeticc |
-| `X-Timestamp` | Unix time in **seconds** (must be within ±5 minutes of server time) |
-| `X-Signature` | Lowercase hex HMAC-SHA256 of the canonical string |
+| Header | Meaning |
+|--------|---------|
+| `X-Api-Key` | Your public API key |
+| `X-Timestamp` | Current Unix time in seconds |
+| `X-Signature` | Signature of the request (see below) |
 
-## Canonical string
+Your server clock should stay accurate. Timestamps more than **5 minutes** off are rejected.
 
-```text
-METHOD
-PATH_WITH_QUERY
-TIMESTAMP
-BODY_SHA256_HEX
-```
+## How to build the signature
 
-1. `METHOD` — uppercase (`GET`)
-2. `PATH_WITH_QUERY` — path **including** `/api` and the query string  
-   Example: `/api/partner/v1/track?imeis=3596…`
-3. `TIMESTAMP` — same value as `X-Timestamp`
-4. `BODY_SHA256_HEX` — SHA-256 hex of the **raw** HTTP body  
-   For all current Partner endpoints (GET), the body is empty → hash of `""`
-
-Then:
+1. Build this text (four lines, joined by newlines):
 
 ```text
-X-Signature = hex( HMAC-SHA256( apiSecret, canonicalString ) )
+GET
+/api/partner/v1/vehicles
+1710000000
+e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 ```
 
-## Node.js example
+| Line | Value |
+|------|--------|
+| 1 | HTTP method in uppercase (`GET`) |
+| 2 | Full path **including** query string (starts with `/api/…`) |
+| 3 | Same number as `X-Timestamp` |
+| 4 | SHA-256 hash of the body (for GET, hash of an empty body) |
+
+2. Sign that text with **HMAC-SHA256** using your **secret**  
+3. Send the result as hex in `X-Signature`
+
+## Example (Node.js)
 
 ```javascript
 const crypto = require('crypto');
 
-function signPartnerRequest({ method, pathWithQuery, timestamp, body, secret }) {
-  const bodyHash = crypto.createHash('sha256').update(body ?? '').digest('hex');
-  const payload = [
-    method.toUpperCase(),
-    pathWithQuery,
-    String(timestamp),
-    bodyHash,
-  ].join('\n');
-  return crypto.createHmac('sha256', secret).update(payload).digest('hex');
+function sign({ method, path, timestamp, body, secret }) {
+  const bodyHash = crypto.createHash('sha256').update(body || '').digest('hex');
+  const stringToSign = [method.toUpperCase(), path, String(timestamp), bodyHash].join('\n');
+  return crypto.createHmac('sha256', secret).update(stringToSign).digest('hex');
 }
 
 const timestamp = Math.floor(Date.now() / 1000);
-const pathWithQuery = '/api/partner/v1/vehicles';
-const signature = signPartnerRequest({
+const path = '/api/partner/v1/vehicles';
+const signature = sign({
   method: 'GET',
-  pathWithQuery,
+  path,
   timestamp,
   body: '',
   secret: process.env.FLEETICC_API_SECRET,
 });
 
 // GET https://api.fleeticc.com/api/partner/v1/vehicles
-// Headers:
-//   X-Api-Key: pk_...
-//   X-Timestamp: <timestamp>
-//   X-Signature: <signature>
+// X-Api-Key: your_api_key
+// X-Timestamp: timestamp
+// X-Signature: signature
 ```
 
-## curl example
+## Example (curl)
 
 ```bash
 BASE="https://api.fleeticc.com"
-PATH_Q="/api/partner/v1/vehicles"
+PATH="/api/partner/v1/vehicles"
 TS=$(date +%s)
 BODY_HASH=$(printf '' | openssl dgst -sha256 -hex | awk '{print $2}')
-PAYLOAD=$(printf 'GET\n%s\n%s\n%s' "$PATH_Q" "$TS" "$BODY_HASH")
-SIG=$(printf '%s' "$PAYLOAD" | openssl dgst -sha256 -hmac "$FLEETICC_API_SECRET" -hex | awk '{print $2}')
+TO_SIGN=$(printf 'GET\n%s\n%s\n%s' "$PATH" "$TS" "$BODY_HASH")
+SIG=$(printf '%s' "$TO_SIGN" | openssl dgst -sha256 -hmac "$FLEETICC_API_SECRET" -hex | awk '{print $2}')
 
-curl -sS "$BASE$PATH_Q" \
+curl -sS "$BASE$PATH" \
   -H "X-Api-Key: $FLEETICC_API_KEY" \
   -H "X-Timestamp: $TS" \
   -H "X-Signature: $SIG"
 ```
 
-## Security notes
+## Tips
 
-- Keep `apiSecret` only on your server. Never embed it in a customer mobile app.
-- Sign the **exact** path + query the HTTP client sends (including parameter order).
-- Skewed clocks fail with `PARTNER_AUTH_TIMESTAMP_SKEW`.
-- Unknown, revoked, or badly signed keys return the same `401` + `PARTNER_AUTH_INVALID` (no key enumeration).
-- If Partner API is disabled for the owner: `403` + `PARTNER_EXTERNAL_API_DISABLED`.
+- Always sign the **exact** path you request (including `?imeis=…` if present)  
+- Keep the secret on your backend only  
+- If a key is revoked, create a new one with Fleeticc support or your Fleeticc admin contact  

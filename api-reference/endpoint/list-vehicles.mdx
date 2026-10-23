@@ -1,7 +1,9 @@
 ---
-title: 'List vehicles'
-description: 'GET /api/partner/v1/vehicles — map Fleeticc vehicles into your system'
+title: "List vehicles"
+description: "Get the vehicles linked to your Partner API account"
 ---
+
+Use this once (or occasionally) to map Fleeticc vehicles into your own database.
 
 ## Request
 
@@ -9,32 +11,36 @@ description: 'GET /api/partner/v1/vehicles — map Fleeticc vehicles into your s
 GET https://api.fleeticc.com/api/partner/v1/vehicles
 ```
 
-Requires [HMAC authentication](/api-reference/endpoint/authentication). No query parameters.
+No query parameters. Requires [authentication](/api-reference/endpoint/authentication).
 
-## Response `data`
+## Response
 
 ```json
 {
-  "vehicles": [
-    {
-      "vehicleId": "8f3c2a1b-…",
-      "imei": "35963310……",
-      "plateNumber": "ABC-1234",
-      "vehicleName": "Truck 01"
-    }
-  ]
+  "code": "200",
+  "message": "Partner vehicles listed successfully.",
+  "data": {
+    "vehicles": [
+      {
+        "vehicleId": "8f3c2a1b-…",
+        "imei": "35963310……",
+        "plateNumber": "ABC-1234",
+        "vehicleName": "Truck 01"
+      }
+    ]
+  }
 }
 ```
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `vehicleId` | string (UUID) | Stable Fleeticc vehicle id — prefer this for your mapping |
-| `imei` | string | GPS device IMEI |
-| `plateNumber` | string | Plate |
-| `vehicleName` | string | Display name |
+| Field | Description |
+|-------|-------------|
+| `vehicleId` | Fleeticc vehicle id (best value to store) |
+| `imei` | GPS device id |
+| `plateNumber` | Number plate |
+| `vehicleName` | Display name |
 
-Only vehicles belonging to the API key’s owner are returned.
+You only see vehicles for the account tied to your API key.
 
-## Rate limit
+## Limits
 
-**60 requests / minute** per `X-Api-Key`.
+Up to **60** requests per minute.

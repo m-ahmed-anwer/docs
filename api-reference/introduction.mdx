@@ -1,79 +1,71 @@
 ---
-title: 'Introduction'
-description: 'Fleeticc Partner GPS API on api.fleeticc.com'
+title: "Quick start"
+description: "Get your first successful Partner API call"
 ---
 
-## Overview
+## 1. Get credentials
 
-Use the Partner API when your own backend (for example a city garbage collection system) needs Fleeticc GPS data without using the Fleeticc mobile or web apps.
+Fleeticc gives you:
 
-**Available today**
+| You receive | Used for |
+|-------------|----------|
+| **API key** | Identifies your integration (`X-Api-Key`) |
+| **Secret** | Signs every request (keep this private) |
 
-| Endpoint | Method | Path |
-|----------|--------|------|
-| List vehicles | `GET` | `/api/partner/v1/vehicles` |
-| Live snapshot | `GET` | `/api/partner/v1/track` |
-| Live SSE stream | `GET` | `/api/partner/v1/track/stream` |
-| History / QR nearest | `GET` | `/api/partner/v1/history` |
+Store the secret on your server only. Never put it in a mobile app or public website.
 
-Webhooks and other fleet APIs are **not** part of this Partner surface yet.
+## 2. Call the API
 
-## Base URL
+Base URL:
 
 ```
 https://api.fleeticc.com
 ```
 
-Example full URL:
+Every request needs three headers (see [Authentication](/api-reference/endpoint/authentication)):
 
-```
-https://api.fleeticc.com/api/partner/v1/vehicles
-```
+- `X-Api-Key`
+- `X-Timestamp`
+- `X-Signature`
 
-## Enablement
+## 3. Typical flow
 
-1. Fleeticc enables **External Partner API** on your fleet owner account.
-2. Fleeticc issues an `apiKeyId` + `apiSecret` (secret shown once).
-3. Your backend signs every request with HMAC-SHA256 (see [Authentication](/api-reference/endpoint/authentication)).
+1. **List vehicles** — save Fleeticc `vehicleId` / `imei` in your system  
+2. **Live location** — show vehicles on a map  
+3. **History** — review past trips, or get the location at a specific time  
 
-Without the enablement flag, even a valid key is rejected (`PARTNER_EXTERNAL_API_DISABLED`).
+## Available endpoints
 
-## Response shape
+| What you need | Method | Path |
+|---------------|--------|------|
+| Vehicle list | `GET` | `/api/partner/v1/vehicles` |
+| Live positions | `GET` | `/api/partner/v1/track` |
+| Live updates (stream) | `GET` | `/api/partner/v1/track/stream` |
+| History | `GET` | `/api/partner/v1/history` |
 
-Success:
+That’s the full Partner API for now. Webhooks are not available yet.
+
+## How responses look
+
+**Success**
 
 ```json
 {
   "code": "200",
-  "message": "Partner vehicles listed successfully.",
+  "message": "…",
   "data": { }
 }
 ```
 
-Error:
+**Error**
 
 ```json
 {
   "code": "401",
-  "message": "Invalid partner signature.",
+  "message": "…",
   "data": null,
   "error": "PARTNER_AUTH_INVALID"
 }
 ```
 
-- HTTP status matches the numeric `code` string.
-- Machine-readable reason is in `error` (string codes such as `PARTNER_AUTH_INVALID`).
-
-## Security summary
-
-- Separate URL namespace: `/api/partner/v1` (not the mobile/web JWT routes).
-- HMAC-SHA256 with clock skew ±5 minutes.
-- Keys bound to one owner; only that owner's vehicles are returned.
-- Rate limits keyed by `X-Api-Key` (see [Rate limits](/api-reference/endpoint/rate-limits)).
-
-## Recommended integration flow
-
-1. Call **List vehicles** once and map Fleeticc `vehicleId` / `imei` into your database.
-2. **Live map**: prefer SSE `track/stream`; fallback poll `track` every few seconds.
-3. **QR collection**: call history with `at=<scanUnix>`; if `point` is null, retry later (delayed GPS).
-4. **Trip playback**: history with `from` + `to`.
+Use the HTTP status and the `error` field when handling failures. Full list: [Error codes](/api-reference/endpoint/error-codes).

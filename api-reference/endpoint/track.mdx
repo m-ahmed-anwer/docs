@@ -1,7 +1,12 @@
 ---
-title: 'Live track'
-description: 'Live GPS snapshot and SSE stream at /api/partner/v1/track'
+title: "Live location"
+description: "Get current vehicle positions, or stream live updates"
 ---
+
+Two options:
+
+- **Snapshot** — one request, current positions  
+- **Stream** — keep a connection open and receive updates as they happen  
 
 ## Snapshot
 
@@ -9,78 +14,79 @@ description: 'Live GPS snapshot and SSE stream at /api/partner/v1/track'
 GET https://api.fleeticc.com/api/partner/v1/track
 ```
 
-### Query
+### Optional filters
 
-| Param | Required | Description |
-|-------|----------|-------------|
-| `imeis` | no | Comma-separated IMEIs (1–100) |
-| `vehicleIds` | no | Comma-separated Fleeticc vehicle UUIDs |
+| Query | Example | Description |
+|-------|---------|-------------|
+| `imeis` | `3596…,3597…` | One or more device IMEIs |
+| `vehicleIds` | `uuid,uuid` | One or more Fleeticc vehicle ids |
 
-Omit both to receive up to **100** vehicles for the owner.
+Leave both empty to get up to **100** vehicles for your account.
 
-Sign the full path **with** the query string, e.g. `/api/partner/v1/track?imeis=3596…`.
+Remember: if you add a query string, include it when you [sign the request](/api-reference/endpoint/authentication).
 
-### Response `data`
+### Example response
 
 ```json
 {
-  "record": [
-    {
-      "vehicleId": "8f3c2a1b-…",
-      "imei": "35963310……",
-      "plateNumber": "ABC-1234",
-      "vehicleName": "Truck 01",
-      "latitude": 7.2916,
-      "longitude": 80.6349,
-      "speed": 32.5,
-      "course": 180,
-      "accstatus": 1,
-      "gpstime": 1761200000,
-      "servertime": 1761200001,
-      "hearttime": 1761200001,
-      "datastatus": 1,
-      "lastSeen": 1761200001
-    }
-  ]
+  "code": "200",
+  "message": "Partner track positions retrieved successfully.",
+  "data": {
+    "record": [
+      {
+        "vehicleId": "8f3c2a1b-…",
+        "imei": "35963310……",
+        "plateNumber": "ABC-1234",
+        "vehicleName": "Truck 01",
+        "latitude": 7.2916,
+        "longitude": 80.6349,
+        "speed": 32.5,
+        "course": 180,
+        "accstatus": 1,
+        "gpstime": 1761200000,
+        "servertime": 1761200001,
+        "lastSeen": 1761200001
+      }
+    ]
+  }
 }
 ```
 
 | Field | Description |
 |-------|-------------|
-| `latitude` / `longitude` | WGS84 |
+| `latitude`, `longitude` | Position |
 | `speed` | km/h |
-| `accstatus` | Ignition when the device reports it (`0` / `1`) |
-| `gpstime` / `servertime` / `hearttime` | Unix seconds |
-| `lastSeen` | Max of recent activity timestamps |
-| `datastatus` | Connectivity / freshness status used by Fleeticc maps |
+| `course` | Heading in degrees |
+| `accstatus` | Ignition when available (`0` / `1`) |
+| `gpstime`, `servertime`, `lastSeen` | Unix time in seconds |
 
-### Rate limit
+### Limits
 
-**120 requests / minute** per `X-Api-Key`.
+Up to **120** requests per minute.
 
 ---
 
-## SSE stream
+## Live stream
 
 ```
-GET https://api.fleeticc.com/api/partner/v1/track/stream?imeis=…
+GET https://api.fleeticc.com/api/partner/v1/track/stream
 ```
 
-Same query rules as the snapshot. Keep the connection open (EventSource / SSE client). HMAC headers are still required on the initial HTTP request.
+Same filters as the snapshot. Use an SSE / EventSource client and keep the connection open.
 
-### Events
+| Update type | Meaning |
+|-------------|---------|
+| `track.snapshot` | Full list when you connect |
+| `track.update` | One vehicle moved / updated |
+| `track.heartbeat` | Connection is alive |
 
-| `event` / `type` | Payload |
-|------------------|---------|
-| `track.snapshot` | `{ "record": [ …live points… ] }` |
-| `track.update` | `{ "record": [ oneLivePoint ] }` |
-| `track.heartbeat` | `{ "ts": <unixSec> }` |
+### When to use which
 
-### Recommendation
+| Use case | Suggested approach |
+|----------|--------------------|
+| Live ops map | Stream |
+| Occasional “where is this vehicle?” | Snapshot every few seconds |
 
-- Admin live map → **SSE**
-- Occasional customer “where is my truck” → **snapshot** poll (3–10s) or on-demand GET
+### Limits
 
-### Rate limit
-
-**30 new stream connections / minute** per `X-Api-Key` (existing streams stay open).
+Up to **30** new stream connections per minute.

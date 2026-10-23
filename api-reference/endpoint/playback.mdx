@@ -1,86 +1,84 @@
 ---
-title: 'History'
-description: 'GET /api/partner/v1/history — trip playback and QR nearest GPS'
+title: "History"
+description: "Past GPS points for a vehicle, or the nearest point at a given time"
 ---
-
-## Request
 
 ```
 GET https://api.fleeticc.com/api/partner/v1/history
 ```
 
-Identify the vehicle with **either** `vehicleId` or `imei` (must belong to the key’s owner).
+Identify the vehicle with **either** `vehicleId` or `imei`.
 
-### Mode A — time range (trip playback)
+## Trip history (time range)
 
-| Param | Required | Description |
+| Query | Required | Description |
 |-------|----------|-------------|
-| `vehicleId` or `imei` | yes | Vehicle identity |
-| `from` | yes | Unix seconds (inclusive) |
-| `to` | yes | Unix seconds (inclusive) |
+| `vehicleId` or `imei` | Yes | Which vehicle |
+| `from` | Yes | Start time (Unix seconds) |
+| `to` | Yes | End time (Unix seconds) |
 
-Maximum window matches Fleeticc playback limits (default **7 days**).
+Maximum range is about **7 days** per request.
 
-### Mode B — nearest point (QR scan / delayed GPS)
-
-| Param | Required | Description |
-|-------|----------|-------------|
-| `vehicleId` or `imei` | yes | Vehicle identity |
-| `at` | yes | Scan timestamp (Unix seconds) |
-| `windowSeconds` | no | Search ±N seconds (default `300`, max `3600`) |
-
-If GPS was offline at scan time, store `at` and **retry later** until `point` is non-null.
-
-## Response examples
-
-### Range
+### Example response
 
 ```json
 {
-  "vehicleId": "8f3c2a1b-…",
-  "imei": "35963310……",
-  "plateNumber": "ABC-1234",
-  "vehicleName": "Truck 01",
-  "mode": "range",
-  "from": 1761190000,
-  "to": 1761200000,
-  "record": [
-    {
-      "timestamp": 1761190100,
-      "latitude": 7.29,
-      "longitude": 80.63,
-      "speed": 12,
-      "heading": 90,
-      "accstatus": 1
-    }
-  ]
-}
-```
-
-### Nearest
-
-```json
-{
-  "vehicleId": "8f3c2a1b-…",
-  "imei": "35963310……",
-  "plateNumber": "ABC-1234",
-  "vehicleName": "Truck 01",
-  "mode": "nearest",
-  "at": 1761200000,
-  "windowSeconds": 300,
-  "point": {
-    "timestamp": 1761199988,
-    "latitude": 7.2911,
-    "longitude": 80.635,
-    "speed": 0,
-    "heading": 10,
-    "accstatus": 0
+  "code": "200",
+  "message": "Partner GPS history retrieved successfully.",
+  "data": {
+    "mode": "range",
+    "vehicleId": "8f3c2a1b-…",
+    "imei": "35963310……",
+    "from": 1761190000,
+    "to": 1761200000,
+    "record": [
+      {
+        "timestamp": 1761190100,
+        "latitude": 7.29,
+        "longitude": 80.63,
+        "speed": 12,
+        "heading": 90,
+        "accstatus": 1
+      }
+    ]
   }
 }
 ```
 
-`point` may be `null` when no GPS samples exist in the window.
+## Location at a specific time
 
-## Rate limit
+Useful when you recorded an event (for example a stop or a scan) and want the GPS point closest to that moment.
 
-**60 requests / minute** per `X-Api-Key`.
+| Query | Required | Description |
+|-------|----------|-------------|
+| `vehicleId` or `imei` | Yes | Which vehicle |
+| `at` | Yes | Time you care about (Unix seconds) |
+| `windowSeconds` | No | Search ± this many seconds (default `300`) |
+
+If GPS was offline at that moment, `point` may be `null`. Save `at` and try again later.
+
+### Example response
+
+```json
+{
+  "code": "200",
+  "message": "Partner GPS history retrieved successfully.",
+  "data": {
+    "mode": "nearest",
+    "at": 1761200000,
+    "windowSeconds": 300,
+    "point": {
+      "timestamp": 1761199988,
+      "latitude": 7.2911,
+      "longitude": 80.635,
+      "speed": 0,
+      "heading": 10,
+      "accstatus": 0
+    }
+  }
+}
+```
+
+## Limits
+
+Up to **60** requests per minute.

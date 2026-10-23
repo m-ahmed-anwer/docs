@@ -1,24 +1,22 @@
-# Fleeticc docs (Mintlify)
+# Fleeticc Partner API docs
 
-Public Partner API documentation for **https://api.fleeticc.com**.
+Public documentation for partners integrating with Fleeticc GPS.
 
-Site: [https://fleeticc.com/docs](https://fleeticc.com/docs)
+- Site: [https://fleeticc.com/docs](https://fleeticc.com/docs)
+- API: [https://api.fleeticc.com](https://api.fleeticc.com)
 
-## Local preview
+## Preview locally
 
 ```bash
 npx mintlify dev
 ```
 
-## Scope
+## What’s covered
 
-Documents only the **Partner GPS API** (`/api/partner/v1`):
-
-- Authentication (HMAC-SHA256)
-- List vehicles
-- Live track (+ SSE)
-- History (range + nearest for QR)
-- Rate limits
-- Error codes
-
-Admin console APIs are internal and are not published here.
+- Quick start  
+- Authentication  
+- List vehicles  
+- Live location (+ stream)  
+- History  
+- Rate limits  
+- Error codes  

@@ -1,76 +1,47 @@
 ---
 title: "Fleeticc Partner API"
-description: "Live and historical GPS for partner integrations on api.fleeticc.com"
+description: "Connect your app to Fleeticc live GPS and history"
 ---
 
-## Getting started
+The Partner API lets your own systems read fleet GPS data from Fleeticc — without using the Fleeticc mobile app or website.
 
-The **Fleeticc Partner API** gives your backend live vehicle positions, vehicle identity, and GPS history. It is separate from the Fleeticc mobile app and website (those use owner login JWTs).
-
-<Card
-  title="API introduction"
-  icon="rocket"
-  href="/api-reference/introduction"
-  horizontal
->
-  Base URL, enablement, HMAC security, and available endpoints.
-</Card>
-
-## Available endpoints
-
-Only these Partner API routes are available today:
+## What you can do
 
 <Columns cols={2}>
-  <Card
-    title="Authentication"
-    icon="key"
-    href="/api-reference/endpoint/authentication"
-  >
-    HMAC-SHA256 request signing
+  <Card title="List vehicles" icon="car" href="/api-reference/endpoint/list-vehicles">
+    Get each vehicle’s id, IMEI, plate, and name
   </Card>
-  <Card
-    title="List vehicles"
-    icon="car"
-    href="/api-reference/endpoint/list-vehicles"
-  >
-    `GET /api/partner/v1/vehicles`
+  <Card title="Live location" icon="map" href="/api-reference/endpoint/track">
+    See where vehicles are right now
   </Card>
-  <Card
-    title="Live track"
-    icon="map"
-    href="/api-reference/endpoint/track"
-  >
-    Snapshot + SSE stream
+  <Card title="History" icon="clock" href="/api-reference/endpoint/playback">
+    Replay a trip, or look up a location at a point in time
   </Card>
-  <Card
-    title="History"
-    icon="clock"
-    href="/api-reference/endpoint/playback"
-  >
-    Trip range + QR nearest point
+  <Card title="Authentication" icon="key" href="/api-reference/endpoint/authentication">
+    How to sign requests securely
   </Card>
 </Columns>
-
-Also see [rate limits](/api-reference/endpoint/rate-limits) and [error codes](/api-reference/endpoint/error-codes).
 
 ## Base URL
 
 ```
-https://api.fleeticc.com/api/partner/v1
+https://api.fleeticc.com
 ```
 
-All Partner API paths below are relative to `https://api.fleeticc.com`.
+All partner endpoints start with `/api/partner/v1/…`
 
-<Warning>
-  Partner access is **off by default**. Fleeticc must enable External Partner API on your owner account and issue an HMAC API key. Contact [info@fleeticc.com](mailto:info@fleeticc.com) if you need access.
-</Warning>
+## Before you start
+
+1. Ask Fleeticc to enable the Partner API on your account  
+2. Receive your **API key** and **secret**  
+3. Follow the [quick start](/api-reference/introduction)
+
+<Note>
+  Access is off by default. Email [info@fleeticc.com](mailto:info@fleeticc.com) if you need Partner API access.
+</Note>
 
 ## Need help?
 
-<Card
-  title="Contact support"
-  icon="envelope"
-  href="https://fleeticc.com/contact"
->
-  Get help from our support team
+<Card title="Contact support" icon="envelope" href="https://fleeticc.com/contact">
+  We’re happy to help with onboarding
 </Card>
