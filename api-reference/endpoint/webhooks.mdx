@@ -47,7 +47,7 @@ Fleeticc POSTs JSON to your URL when a matching event fires for one of your vehi
 }
 ```
 
-`type` is a Fleeticc `AlertType` string (for example `SOS`, `OVERSPEED`, `ENGINE_ON`, `GEOFENCE_EXIT`) or `webhook.test` for the dashboard test ping.
+`type` is a Fleeticc `AlertType` string (for example `SOS`, `OVERSPEED`, `ENGINE_ON`, `GEOFENCE_EXIT`).
 
 ### Verify the signature (Node)
 
@@ -66,10 +66,6 @@ function verifyFleeticcWebhook({ secret, timestamp, rawBody, signature }) {
 ```
 
 Reject requests whose timestamp is more than a few minutes from your clock, and respond with `2xx` quickly. Non-2xx responses are retried with exponential backoff.
-
-## Test
-
-Use **Send test** on the Partner API page. You receive `type: "webhook.test"` with the same signature headers.
 
 ## Limits
 
