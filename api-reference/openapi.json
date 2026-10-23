@@ -191,7 +191,7 @@
             "name": "at",
             "in": "query",
             "schema": { "type": "integer" },
-            "description": "Nearest-point timestamp (QR scan)"
+            "description": "Unix timestamp to find the nearest GPS point"
           },
           {
             "name": "windowSeconds",
