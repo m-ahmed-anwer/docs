@@ -5,7 +5,7 @@ description: "Get your first successful Partner API call"
 
 ## 1. Get credentials
 
-After Fleeticc enables Partner API on your account, the **owner** generates keys in the website dashboard (**Partner API** in the account menu).
+After Fleeticc enables Partner API on your account (paid add-on — request enablement and pricing via [info@fleeticc.com](mailto:info@fleeticc.com)), the **owner** generates keys in the website dashboard (**Partner API** in the account menu).
 
 | You create | Used for |
 |------------|----------|
@@ -27,6 +27,23 @@ Every request needs three headers (see [Authentication](/api-reference/endpoint/
 - `X-Api-Key`
 - `X-Timestamp`
 - `X-Signature`
+
+### Request example — list vehicles
+
+```bash
+export PATH="/usr/bin:/bin:/usr/sbin:/sbin:/opt/homebrew/bin:$PATH"
+KEY="$FLEETICC_API_KEY"
+SECRET="$FLEETICC_API_SECRET"
+REQ_PATH="/api/partner/v1/vehicles"
+TS=$(date +%s)
+BODY_HASH=$(printf '' | openssl dgst -sha256 -hex | awk '{print $NF}')
+SIG=$(printf 'GET\n%s\n%s\n%s' "$REQ_PATH" "$TS" "$BODY_HASH" | openssl dgst -sha256 -hmac "$SECRET" -hex | awk '{print $NF}')
+
+curl -sS -X GET "https://api.fleeticc.com$REQ_PATH" \
+  -H "X-Api-Key: $KEY" \
+  -H "X-Timestamp: $TS" \
+  -H "X-Signature: $SIG"
+```
 
 ## 3. Typical flow
 

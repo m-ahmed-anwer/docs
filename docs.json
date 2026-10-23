@@ -8,6 +8,7 @@
     "dark": "#007aff"
   },
   "favicon": "/favicon.ico",
+  "openapi": ["api-reference/openapi.json"],
   "navigation": {
     "tabs": [
       {

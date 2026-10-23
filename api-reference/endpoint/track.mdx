@@ -1,6 +1,7 @@
 ---
 title: "Live location"
 description: "Get current vehicle positions, or stream live updates"
+openapi: "GET /api/partner/v1/track"
 ---
 
 Two options:
@@ -14,16 +15,48 @@ Two options:
 GET https://api.fleeticc.com/api/partner/v1/track
 ```
 
-### Optional filters
+### Headers
 
-| Query | Example | Description |
-|-------|---------|-------------|
-| `imeis` | `3596…,3597…` | One or more device IMEIs |
-| `vehicleIds` | `uuid,uuid` | One or more Fleeticc vehicle ids |
+<ParamField header="X-Api-Key" type="string" required>
+  Your Partner API key
+</ParamField>
+
+<ParamField header="X-Timestamp" type="string" required>
+  Unix seconds
+</ParamField>
+
+<ParamField header="X-Signature" type="string" required>
+  HMAC signature — must cover the **exact** path including query string
+</ParamField>
+
+### Query
+
+<ParamField query="imeis" type="string">
+  Comma-separated IMEIs (optional). Example: `3596…,3597…`
+</ParamField>
+
+<ParamField query="vehicleIds" type="string">
+  Comma-separated Fleeticc vehicle UUIDs (optional)
+</ParamField>
 
 Leave both empty to get up to **100** vehicles for your account.
 
-Remember: if you add a query string, include it when you [sign the request](/api-reference/endpoint/authentication).
+### Request example
+
+```bash
+export PATH="/usr/bin:/bin:/usr/sbin:/sbin:/opt/homebrew/bin:$PATH"
+KEY="$FLEETICC_API_KEY"
+SECRET="$FLEETICC_API_SECRET"
+REQ_PATH="/api/partner/v1/track?imeis=359633100000001"
+TS=$(date +%s)
+BODY_HASH=$(printf '' | openssl dgst -sha256 -hex | awk '{print $NF}')
+SIG=$(printf 'GET\n%s\n%s\n%s' "$REQ_PATH" "$TS" "$BODY_HASH" | openssl dgst -sha256 -hmac "$SECRET" -hex | awk '{print $NF}')
+
+curl -sS -X GET "https://api.fleeticc.com$REQ_PATH" \
+  -H "X-Api-Key: $KEY" \
+  -H "X-Timestamp: $TS" \
+  -H "X-Signature: $SIG"
+```
 
 ### Example response
 
@@ -34,8 +67,8 @@ Remember: if you add a query string, include it when you [sign the request](/api
   "data": {
     "record": [
       {
-        "vehicleId": "8f3c2a1b-…",
-        "imei": "35963310……",
+        "vehicleId": "8f3c2a1b-4d5e-6f70-8192-a3b4c5d6e7f8",
+        "imei": "359633100000001",
         "plateNumber": "ABC-1234",
         "vehicleName": "Truck 01",
         "latitude": 7.2916,
@@ -62,17 +95,17 @@ Remember: if you add a query string, include it when you [sign the request](/api
 
 ### Limits
 
-Up to **120** requests per minute.
+Up to **120** requests per minute per API key.
 
 ---
 
-## Live stream
+## Live stream (SSE)
 
 ```
 GET https://api.fleeticc.com/api/partner/v1/track/stream
 ```
 
-Same filters as the snapshot. Use an SSE / EventSource client and keep the connection open.
+Same headers and filters as the snapshot. Use an SSE / EventSource client and keep the connection open.
 
 | Update type | Meaning |
 |-------------|---------|
@@ -89,4 +122,4 @@ Same filters as the snapshot. Use an SSE / EventSource client and keep the conne
 
 ### Limits
 
-Up to **30** new stream connections per minute.
+Up to **30** new stream connections per minute per API key.

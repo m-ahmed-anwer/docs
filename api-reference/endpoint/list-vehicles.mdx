@@ -1,19 +1,71 @@
 ---
 title: "List vehicles"
 description: "Get the vehicles linked to your Partner API account"
+openapi: "GET /api/partner/v1/vehicles"
 ---
 
-Use this once (or occasionally) to map Fleeticc vehicles into your own database.
+Get vehicles for the account tied to your API key. Use this to map Fleeticc `vehicleId` / `imei` into your system.
 
 ## Request
 
-```
-GET https://api.fleeticc.com/api/partner/v1/vehicles
-```
+<ParamField header="X-Api-Key" type="string" required>
+  Your Partner API key (`pk_…`)
+</ParamField>
 
-No query parameters. Requires [authentication](/api-reference/endpoint/authentication).
+<ParamField header="X-Timestamp" type="string" required>
+  Current Unix time in seconds
+</ParamField>
+
+<ParamField header="X-Signature" type="string" required>
+  HMAC-SHA256 hex signature — see [Authentication](/api-reference/endpoint/authentication)
+</ParamField>
+
+No query parameters.
+
+## Request example
+
+```bash
+export PATH="/usr/bin:/bin:/usr/sbin:/sbin:/opt/homebrew/bin:$PATH"
+KEY="$FLEETICC_API_KEY"
+SECRET="$FLEETICC_API_SECRET"
+REQ_PATH="/api/partner/v1/vehicles"
+TS=$(date +%s)
+BODY_HASH=$(printf '' | openssl dgst -sha256 -hex | awk '{print $NF}')
+SIG=$(printf 'GET\n%s\n%s\n%s' "$REQ_PATH" "$TS" "$BODY_HASH" | openssl dgst -sha256 -hmac "$SECRET" -hex | awk '{print $NF}')
+
+curl -sS -X GET "https://api.fleeticc.com$REQ_PATH" \
+  -H "X-Api-Key: $KEY" \
+  -H "X-Timestamp: $TS" \
+  -H "X-Signature: $SIG"
+```
 
 ## Response
+
+<ResponseField name="code" type="string">
+  `"200"` on success
+</ResponseField>
+
+<ResponseField name="message" type="string">
+  Human-readable status
+</ResponseField>
+
+<ResponseField name="data.vehicles" type="array">
+  Vehicle list
+  <Expandable title="vehicle fields">
+    <ResponseField name="vehicleId" type="string">
+      Fleeticc vehicle UUID (best value to store)
+    </ResponseField>
+    <ResponseField name="imei" type="string">
+      GPS device id
+    </ResponseField>
+    <ResponseField name="plateNumber" type="string">
+      Number plate
+    </ResponseField>
+    <ResponseField name="vehicleName" type="string">
+      Display name
+    </ResponseField>
+  </Expandable>
+</ResponseField>
 
 ```json
 {
@@ -22,8 +74,8 @@ No query parameters. Requires [authentication](/api-reference/endpoint/authentic
   "data": {
     "vehicles": [
       {
-        "vehicleId": "8f3c2a1b-…",
-        "imei": "35963310……",
+        "vehicleId": "8f3c2a1b-4d5e-6f70-8192-a3b4c5d6e7f8",
+        "imei": "359633100000001",
         "plateNumber": "ABC-1234",
         "vehicleName": "Truck 01"
       }
@@ -32,15 +84,6 @@ No query parameters. Requires [authentication](/api-reference/endpoint/authentic
 }
 ```
 
-| Field | Description |
-|-------|-------------|
-| `vehicleId` | Fleeticc vehicle id (best value to store) |
-| `imei` | GPS device id |
-| `plateNumber` | Number plate |
-| `vehicleName` | Display name |
-
-You only see vehicles for the account tied to your API key.
-
 ## Limits
 
-Up to **60** requests per minute.
+Up to **60** requests per minute per API key.

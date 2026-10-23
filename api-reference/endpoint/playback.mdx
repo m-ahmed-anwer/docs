@@ -1,6 +1,7 @@
 ---
 title: "History"
 description: "Past GPS points for a vehicle, or the nearest point at a given time"
+openapi: "GET /api/partner/v1/history"
 ---
 
 ```
@@ -9,15 +10,59 @@ GET https://api.fleeticc.com/api/partner/v1/history
 
 Identify the vehicle with **either** `vehicleId` or `imei`.
 
+## Headers
+
+<ParamField header="X-Api-Key" type="string" required>
+  Your Partner API key
+</ParamField>
+
+<ParamField header="X-Timestamp" type="string" required>
+  Unix seconds
+</ParamField>
+
+<ParamField header="X-Signature" type="string" required>
+  HMAC signature of the full path **including** the query string
+</ParamField>
+
 ## Trip history (time range)
 
-| Query | Required | Description |
-|-------|----------|-------------|
-| `vehicleId` or `imei` | Yes | Which vehicle |
-| `from` | Yes | Start time (Unix seconds) |
-| `to` | Yes | End time (Unix seconds) |
+<ParamField query="vehicleId" type="string">
+  Fleeticc vehicle UUID (or use `imei`)
+</ParamField>
 
-Maximum range is about **7 days** per request.
+<ParamField query="imei" type="string">
+  Device IMEI (or use `vehicleId`)
+</ParamField>
+
+<ParamField query="from" type="integer" required>
+  Start time (Unix seconds)
+</ParamField>
+
+<ParamField query="to" type="integer" required>
+  End time (Unix seconds)
+</ParamField>
+
+Maximum range is about **31 days (1 month)** per request.
+
+### Request example
+
+```bash
+export PATH="/usr/bin:/bin:/usr/sbin:/sbin:/opt/homebrew/bin:$PATH"
+KEY="$FLEETICC_API_KEY"
+SECRET="$FLEETICC_API_SECRET"
+IMEI="359633100000001"
+FROM=$(($(date +%s) - 86400))
+TO=$(date +%s)
+REQ_PATH="/api/partner/v1/history?imei=${IMEI}&from=${FROM}&to=${TO}"
+TS=$(date +%s)
+BODY_HASH=$(printf '' | openssl dgst -sha256 -hex | awk '{print $NF}')
+SIG=$(printf 'GET\n%s\n%s\n%s' "$REQ_PATH" "$TS" "$BODY_HASH" | openssl dgst -sha256 -hmac "$SECRET" -hex | awk '{print $NF}')
+
+curl -sS -X GET "https://api.fleeticc.com$REQ_PATH" \
+  -H "X-Api-Key: $KEY" \
+  -H "X-Timestamp: $TS" \
+  -H "X-Signature: $SIG"
+```
 
 ### Example response
 
@@ -27,8 +72,8 @@ Maximum range is about **7 days** per request.
   "message": "Partner GPS history retrieved successfully.",
   "data": {
     "mode": "range",
-    "vehicleId": "8f3c2a1b-…",
-    "imei": "35963310……",
+    "vehicleId": "8f3c2a1b-4d5e-6f70-8192-a3b4c5d6e7f8",
+    "imei": "359633100000001",
     "from": 1761190000,
     "to": 1761200000,
     "record": [
@@ -49,11 +94,21 @@ Maximum range is about **7 days** per request.
 
 Useful when you already have a timestamp (for example a stop or job event) and want the GPS point closest to that moment.
 
-| Query | Required | Description |
-|-------|----------|-------------|
-| `vehicleId` or `imei` | Yes | Which vehicle |
-| `at` | Yes | Time you care about (Unix seconds) |
-| `windowSeconds` | No | Search ± this many seconds (default `300`) |
+<ParamField query="vehicleId" type="string">
+  Fleeticc vehicle UUID (or use `imei`)
+</ParamField>
+
+<ParamField query="imei" type="string">
+  Device IMEI (or use `vehicleId`)
+</ParamField>
+
+<ParamField query="at" type="integer" required>
+  Time you care about (Unix seconds)
+</ParamField>
+
+<ParamField query="windowSeconds" type="integer">
+  Search ± this many seconds (default `300`, max `3600`)
+</ParamField>
 
 If GPS was offline at that moment, `point` may be `null`. Save `at` and try again later.
 
@@ -81,4 +136,4 @@ If GPS was offline at that moment, `point` may be `null`. Save `at` and try agai
 
 ## Limits
 
-Up to **60** requests per minute.
+Up to **60** requests per minute per API key. Max range **~31 days** per `from`/`to` request.

@@ -26,7 +26,30 @@
         "type": "apiKey",
         "in": "header",
         "name": "X-Api-Key",
-        "description": "Also send X-Timestamp and X-Signature (HMAC-SHA256). See docs authentication page."
+        "description": "Also send X-Timestamp (Unix seconds) and X-Signature (HMAC-SHA256 hex). See Authentication."
+      }
+    },
+    "parameters": {
+      "XApiKey": {
+        "name": "X-Api-Key",
+        "in": "header",
+        "required": true,
+        "schema": { "type": "string", "example": "pk_078dd6a8b290dbce3543d18f9c6cf72d" },
+        "description": "Your Partner API key"
+      },
+      "XTimestamp": {
+        "name": "X-Timestamp",
+        "in": "header",
+        "required": true,
+        "schema": { "type": "string", "example": "1761200000" },
+        "description": "Current Unix time in seconds (±5 minutes)"
+      },
+      "XSignature": {
+        "name": "X-Signature",
+        "in": "header",
+        "required": true,
+        "schema": { "type": "string" },
+        "description": "HMAC-SHA256 hex of METHOD\\nPATH\\nTIMESTAMP\\nBODY_SHA256"
       }
     },
     "schemas": {
@@ -50,10 +73,10 @@
       "PartnerVehicle": {
         "type": "object",
         "properties": {
-          "vehicleId": { "type": "string", "format": "uuid" },
-          "imei": { "type": "string" },
-          "plateNumber": { "type": "string" },
-          "vehicleName": { "type": "string" }
+          "vehicleId": { "type": "string", "format": "uuid", "example": "8f3c2a1b-4d5e-6f70-8192-a3b4c5d6e7f8" },
+          "imei": { "type": "string", "example": "359633100000001" },
+          "plateNumber": { "type": "string", "example": "ABC-1234" },
+          "vehicleName": { "type": "string", "example": "Truck 01" }
         }
       },
       "PartnerLivePoint": {
@@ -63,11 +86,11 @@
           "imei": { "type": "string" },
           "plateNumber": { "type": "string" },
           "vehicleName": { "type": "string" },
-          "latitude": { "type": "number" },
-          "longitude": { "type": "number" },
-          "speed": { "type": "number" },
-          "course": { "type": "number" },
-          "accstatus": { "type": "integer" },
+          "latitude": { "type": "number", "example": 7.2916 },
+          "longitude": { "type": "number", "example": 80.6349 },
+          "speed": { "type": "number", "example": 32.5 },
+          "course": { "type": "number", "example": 180 },
+          "accstatus": { "type": "integer", "example": 1 },
           "gpstime": { "type": "integer" },
           "servertime": { "type": "integer" },
           "hearttime": { "type": "integer" },
@@ -92,17 +115,41 @@
     "/api/partner/v1/vehicles": {
       "get": {
         "summary": "List vehicles",
+        "description": "Vehicles linked to the Partner API account.",
         "operationId": "partnerListVehicles",
+        "parameters": [
+          { "$ref": "#/components/parameters/XApiKey" },
+          { "$ref": "#/components/parameters/XTimestamp" },
+          { "$ref": "#/components/parameters/XSignature" }
+        ],
         "responses": {
           "200": {
             "description": "Owner vehicles",
             "content": {
               "application/json": {
-                "schema": {
-                  "allOf": [
-                    { "$ref": "#/components/schemas/ApiSuccess" }
-                  ]
+                "schema": { "$ref": "#/components/schemas/ApiSuccess" },
+                "example": {
+                  "code": "200",
+                  "message": "Partner vehicles listed successfully.",
+                  "data": {
+                    "vehicles": [
+                      {
+                        "vehicleId": "8f3c2a1b-4d5e-6f70-8192-a3b4c5d6e7f8",
+                        "imei": "359633100000001",
+                        "plateNumber": "ABC-1234",
+                        "vehicleName": "Truck 01"
+                      }
+                    ]
+                  }
                 }
+              }
+            }
+          },
+          "401": {
+            "description": "Auth failed",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
               }
             }
           }
@@ -112,39 +159,80 @@
     "/api/partner/v1/track": {
       "get": {
         "summary": "Live GPS snapshot",
+        "description": "Current positions for one or more vehicles.",
         "operationId": "partnerTrackSnapshot",
         "parameters": [
+          { "$ref": "#/components/parameters/XApiKey" },
+          { "$ref": "#/components/parameters/XTimestamp" },
+          { "$ref": "#/components/parameters/XSignature" },
           {
             "name": "imeis",
             "in": "query",
-            "schema": { "type": "string" },
-            "description": "Comma-separated IMEIs (1–100)"
+            "required": false,
+            "schema": { "type": "string", "example": "359633100000001,359633100000002" },
+            "description": "Comma-separated IMEIs (1–100). Leave empty for up to 100 vehicles."
           },
           {
             "name": "vehicleIds",
             "in": "query",
+            "required": false,
             "schema": { "type": "string" },
-            "description": "Comma-separated vehicle UUIDs"
+            "description": "Comma-separated Fleeticc vehicle UUIDs"
           }
         ],
         "responses": {
-          "200": { "description": "Live positions" }
+          "200": {
+            "description": "Live positions",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiSuccess" },
+                "example": {
+                  "code": "200",
+                  "message": "Partner track positions retrieved successfully.",
+                  "data": {
+                    "record": [
+                      {
+                        "vehicleId": "8f3c2a1b-4d5e-6f70-8192-a3b4c5d6e7f8",
+                        "imei": "359633100000001",
+                        "plateNumber": "ABC-1234",
+                        "vehicleName": "Truck 01",
+                        "latitude": 7.2916,
+                        "longitude": 80.6349,
+                        "speed": 32.5,
+                        "course": 180,
+                        "accstatus": 1,
+                        "gpstime": 1761200000,
+                        "servertime": 1761200001,
+                        "lastSeen": 1761200001
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
         }
       }
     },
     "/api/partner/v1/track/stream": {
       "get": {
         "summary": "Live GPS SSE stream",
+        "description": "Server-Sent Events: track.snapshot, track.update, track.heartbeat.",
         "operationId": "partnerTrackStream",
         "parameters": [
+          { "$ref": "#/components/parameters/XApiKey" },
+          { "$ref": "#/components/parameters/XTimestamp" },
+          { "$ref": "#/components/parameters/XSignature" },
           {
             "name": "imeis",
             "in": "query",
+            "required": false,
             "schema": { "type": "string" }
           },
           {
             "name": "vehicleIds",
             "in": "query",
+            "required": false,
             "schema": { "type": "string" }
           }
         ],
@@ -163,44 +251,64 @@
     "/api/partner/v1/history": {
       "get": {
         "summary": "GPS history or nearest point",
+        "description": "Trip range (from+to, max ~31 days) or nearest point (at).",
         "operationId": "partnerHistory",
         "parameters": [
+          { "$ref": "#/components/parameters/XApiKey" },
+          { "$ref": "#/components/parameters/XTimestamp" },
+          { "$ref": "#/components/parameters/XSignature" },
           {
             "name": "vehicleId",
             "in": "query",
-            "schema": { "type": "string", "format": "uuid" }
+            "required": false,
+            "schema": { "type": "string", "format": "uuid" },
+            "description": "Fleeticc vehicle id (or use imei)"
           },
           {
             "name": "imei",
             "in": "query",
-            "schema": { "type": "string" }
+            "required": false,
+            "schema": { "type": "string", "example": "359633100000001" },
+            "description": "Device IMEI (or use vehicleId)"
           },
           {
             "name": "from",
             "in": "query",
-            "schema": { "type": "integer" },
-            "description": "Range start (Unix seconds)"
+            "required": false,
+            "schema": { "type": "integer", "example": 1761190000 },
+            "description": "Range start (Unix seconds). Required with to."
           },
           {
             "name": "to",
             "in": "query",
-            "schema": { "type": "integer" },
-            "description": "Range end (Unix seconds)"
+            "required": false,
+            "schema": { "type": "integer", "example": 1761200000 },
+            "description": "Range end (Unix seconds). Required with from. Max span ~31 days."
           },
           {
             "name": "at",
             "in": "query",
+            "required": false,
             "schema": { "type": "integer" },
-            "description": "Unix timestamp to find the nearest GPS point"
+            "description": "Unix seconds — nearest GPS point mode"
           },
           {
             "name": "windowSeconds",
             "in": "query",
-            "schema": { "type": "integer", "default": 300 }
+            "required": false,
+            "schema": { "type": "integer", "default": 300 },
+            "description": "Search ± seconds around at (default 300, max 3600)"
           }
         ],
         "responses": {
-          "200": { "description": "History range or nearest point" }
+          "200": {
+            "description": "History range or nearest point",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiSuccess" }
+              }
+            }
+          }
         }
       }
     }

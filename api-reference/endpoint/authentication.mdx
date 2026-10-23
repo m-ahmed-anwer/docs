@@ -5,13 +5,21 @@ description: "Sign Partner API requests with your API key and secret"
 
 The Partner API does not use email/password login. You authenticate with an **API key** and a **request signature**.
 
+Generate keys on the Fleeticc website → **Partner API** (owner only), after Fleeticc enables access.
+
 ## Headers on every request
 
-| Header | Meaning |
-|--------|---------|
-| `X-Api-Key` | Your public API key |
-| `X-Timestamp` | Current Unix time in seconds |
-| `X-Signature` | Signature of the request (see below) |
+<ParamField header="X-Api-Key" type="string" required>
+  Your public API key (`pk_…`)
+</ParamField>
+
+<ParamField header="X-Timestamp" type="string" required>
+  Current Unix time in seconds
+</ParamField>
+
+<ParamField header="X-Signature" type="string" required>
+  HMAC-SHA256 hex of the canonical string (see below)
+</ParamField>
 
 Your server clock should stay accurate. Timestamps more than **5 minutes** off are rejected.
 
@@ -63,21 +71,24 @@ const signature = sign({
 // X-Signature: signature
 ```
 
-## Example (curl)
+## Request example (curl)
 
 ```bash
-BASE="https://api.fleeticc.com"
-PATH="/api/partner/v1/vehicles"
+export PATH="/usr/bin:/bin:/usr/sbin:/sbin:/opt/homebrew/bin:$PATH"
+KEY="$FLEETICC_API_KEY"
+SECRET="$FLEETICC_API_SECRET"
+REQ_PATH="/api/partner/v1/vehicles"
 TS=$(date +%s)
-BODY_HASH=$(printf '' | openssl dgst -sha256 -hex | awk '{print $2}')
-TO_SIGN=$(printf 'GET\n%s\n%s\n%s' "$PATH" "$TS" "$BODY_HASH")
-SIG=$(printf '%s' "$TO_SIGN" | openssl dgst -sha256 -hmac "$FLEETICC_API_SECRET" -hex | awk '{print $2}')
+BODY_HASH=$(printf '' | openssl dgst -sha256 -hex | awk '{print $NF}')
+SIG=$(printf 'GET\n%s\n%s\n%s' "$REQ_PATH" "$TS" "$BODY_HASH" | openssl dgst -sha256 -hmac "$SECRET" -hex | awk '{print $NF}')
 
-curl -sS "$BASE$PATH" \
-  -H "X-Api-Key: $FLEETICC_API_KEY" \
+curl -sS -X GET "https://api.fleeticc.com$REQ_PATH" \
+  -H "X-Api-Key: $KEY" \
   -H "X-Timestamp: $TS" \
   -H "X-Signature: $SIG"
 ```
+
+On macOS, use `awk '{print $NF}'` (not `$2`) so the OpenSSL hex hash is read correctly. Do **not** set a shell variable named `PATH` to the API path — that breaks system commands.
 
 ## Tips
 
