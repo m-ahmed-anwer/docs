@@ -83,4 +83,5 @@ curl -sS "$BASE$PATH" \
 
 - Always sign the **exact** path you request (including `?imeis=…` if present)  
 - Keep the secret on your backend only  
-- If a key is revoked, create a new one with Fleeticc support or your Fleeticc admin contact  
+- Rotate or revoke keys from the Fleeticc website → **Partner API** (owner only). After rotate, update your server with the new secret immediately.  
+
