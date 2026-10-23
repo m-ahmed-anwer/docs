@@ -5,14 +5,16 @@ description: "How many Partner API requests you can send"
 
 Limits apply **per API key**.
 
-| Endpoint | Limit |
-|----------|--------|
-| List vehicles | 60 / minute |
-| Live snapshot | 120 / minute |
-| Live stream | 30 new connections / minute |
-| History | 60 / minute |
+Fleeticc also enforces a **per IP** ceiling on Partner routes so forged or rotated keys cannot bypass limits.
 
-If you go over the limit, you get **HTTP 429**.
+| Endpoint | Per API key | Per IP (ceiling) |
+|----------|-------------|------------------|
+| List vehicles | 60 / minute | 90 / minute |
+| Live snapshot | 120 / minute | 150 / minute |
+| Live stream | 30 new connections / minute | 40 / minute |
+| History | 60 / minute | 90 / minute |
+
+If you go over either limit, you get **HTTP 429**.
 
 ```json
 {
