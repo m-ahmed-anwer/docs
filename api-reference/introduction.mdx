@@ -1,56 +1,79 @@
 ---
 title: 'Introduction'
-description: 'Complete API reference for Fleeticc Open API endpoints'
+description: 'Fleeticc Partner GPS API on api.fleeticc.com'
 ---
 
 ## Overview
 
-The Fleeticc Open API provides programmatic access to vehicle tracking data, allowing you to integrate GPS tracking capabilities into your applications. All endpoints require authentication using access tokens obtained through the Authorization endpoint.
+Use the Partner API when your own backend (for example a city garbage collection system) needs Fleeticc GPS data without using the Fleeticc mobile or web apps.
 
-<Warning>
-  API access is restricted to paid users only (Basic and Premium plans). Free plan users cannot access any Open API endpoints.
-</Warning>
+**Available today**
+
+| Endpoint | Method | Path |
+|----------|--------|------|
+| List vehicles | `GET` | `/api/partner/v1/vehicles` |
+| Live snapshot | `GET` | `/api/partner/v1/track` |
+| Live SSE stream | `GET` | `/api/partner/v1/track/stream` |
+| History / QR nearest | `GET` | `/api/partner/v1/history` |
+
+Webhooks and other fleet APIs are **not** part of this Partner surface yet.
 
 ## Base URL
 
 ```
-https://bounpkufhwhptqbktpfl.supabase.co/functions/v1
+https://api.fleeticc.com
 ```
 
-## Authentication Flow
+Example full URL:
 
-1. Use your Fleeticc account email and password (no separate API password needed)
-2. Generate a signature using MD5 hash algorithm: `md5(md5(password) + time)`
-3. Request an access token from the Authorization endpoint with password and signature
-4. Use the access token for all subsequent API requests
-5. Access tokens expire after 1 hour (3600 seconds)
+```
+https://api.fleeticc.com/api/partner/v1/vehicles
+```
 
-## Rate Limiting
+## Enablement
 
-Rate limits are enforced per user to ensure fair usage:
+1. Fleeticc enables **External Partner API** on your fleet owner account.
+2. Fleeticc issues an `apiKeyId` + `apiSecret` (secret shown once).
+3. Your backend signs every request with HMAC-SHA256 (see [Authentication](/api-reference/endpoint/authentication)).
 
-- **Authorization**: 5 requests/minute per account
-- **List Vehicles**: 10 requests/minute per user
-- **Playback**: 5 requests/minute per user
-- **Track**: 6 requests/minute per user (600 global)
+Without the enablement flag, even a valid key is rejected (`PARTNER_EXTERNAL_API_DISABLED`).
 
-## Error Handling
+## Response shape
 
-All endpoints return JSON responses with a consistent error format:
+Success:
 
 ```json
 {
-  "code": 10005,
-  "message": "Missing required parameter"
+  "code": "200",
+  "message": "Partner vehicles listed successfully.",
+  "data": { }
 }
 ```
 
-## Subscription Requirements
+Error:
 
-<Warning>
-  All Open API endpoints require an active Basic or Premium subscription. Free plan users will receive error code 10007 (Permission denied).
-</Warning>
+```json
+{
+  "code": "401",
+  "message": "Invalid partner signature.",
+  "data": null,
+  "error": "PARTNER_AUTH_INVALID"
+}
+```
 
-- ✅ **Basic Plan**: Full API access
-- ✅ **Premium Plan**: Full API access
-- ❌ **Free Plan**: No API access
+- HTTP status matches the numeric `code` string.
+- Machine-readable reason is in `error` (string codes such as `PARTNER_AUTH_INVALID`).
+
+## Security summary
+
+- Separate URL namespace: `/api/partner/v1` (not the mobile/web JWT routes).
+- HMAC-SHA256 with clock skew ±5 minutes.
+- Keys bound to one owner; only that owner's vehicles are returned.
+- Rate limits keyed by `X-Api-Key` (see [Rate limits](/api-reference/endpoint/rate-limits)).
+
+## Recommended integration flow
+
+1. Call **List vehicles** once and map Fleeticc `vehicleId` / `imei` into your database.
+2. **Live map**: prefer SSE `track/stream`; fallback poll `track` every few seconds.
+3. **QR collection**: call history with `at=<scanUnix>`; if `point` is null, retry later (delayed GPS).
+4. **Trip playback**: history with `from` + `to`.

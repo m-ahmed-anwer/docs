@@ -1,0 +1,26 @@
+---
+title: 'Rate limits'
+description: 'Partner API throttling on api.fleeticc.com'
+---
+
+Limits are enforced **per partner API key** (`X-Api-Key`), not per IP shared with the Fleeticc mobile/web apps.
+
+| Endpoint | Limit |
+|----------|--------|
+| `GET /api/partner/v1/vehicles` | **60** / minute |
+| `GET /api/partner/v1/track` | **120** / minute |
+| `GET /api/partner/v1/track/stream` | **30** new connections / minute |
+| `GET /api/partner/v1/history` | **60** / minute |
+
+When exceeded, the API returns **HTTP 429** with `error: "TOO_MANY_REQUESTS"`.
+
+```json
+{
+  "code": "429",
+  "message": "Too many attempts; try again later.",
+  "data": null,
+  "error": "TOO_MANY_REQUESTS"
+}
+```
+
+Backoff and retry with jitter. Prefer SSE for continuous live maps instead of aggressive polling.

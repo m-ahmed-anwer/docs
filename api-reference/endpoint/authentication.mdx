@@ -1,112 +1,93 @@
 ---
 title: 'Authentication'
-openapi: 'GET /open-api-authorization'
+description: 'HMAC-SHA256 signing for Partner API requests on api.fleeticc.com'
 ---
 
-Get an access token for making authenticated API requests. Access tokens are valid for 1 hour (3600 seconds). When a new token is requested, the old one is invalidated immediately.
+Every Partner API request must include three headers. There is **no** login password or JWT for partners.
 
-## Request
+## Headers
 
-<ParamField query="time" type="long" required>
-  Unix timestamp in seconds (when request is sent)
-</ParamField>
+| Header | Description |
+|--------|-------------|
+| `X-Api-Key` | Public key id (`pk_…`) issued by Fleeticc |
+| `X-Timestamp` | Unix time in **seconds** (must be within ±5 minutes of server time) |
+| `X-Signature` | Lowercase hex HMAC-SHA256 of the canonical string |
 
-<ParamField query="account" type="string" required>
-  User email address
-</ParamField>
+## Canonical string
 
-<ParamField query="password" type="string" required>
-  Your Fleeticc account password
-</ParamField>
+```text
+METHOD
+PATH_WITH_QUERY
+TIMESTAMP
+BODY_SHA256_HEX
+```
 
-<ParamField query="signature" type="string" required>
-  MD5 hash = md5(md5(password) + time)
-</ParamField>
+1. `METHOD` — uppercase (`GET`)
+2. `PATH_WITH_QUERY` — path **including** `/api` and the query string  
+   Example: `/api/partner/v1/track?imeis=3596…`
+3. `TIMESTAMP` — same value as `X-Timestamp`
+4. `BODY_SHA256_HEX` — SHA-256 hex of the **raw** HTTP body  
+   For all current Partner endpoints (GET), the body is empty → hash of `""`
 
-## Signature Calculation
+Then:
 
-1. Calculate `md5(password)` → password_hash
-2. Calculate `md5(password_hash + time)` → signature
-3. Use lowercase 32-character hex string
+```text
+X-Signature = hex( HMAC-SHA256( apiSecret, canonicalString ) )
+```
 
-### Example
+## Node.js example
 
 ```javascript
-// password = "ExamplePassword123" (your Fleeticc account password)
-// time = 1609459200
-// md5("ExamplePassword123") = "example123..." (example hash)
-// md5("example123..." + "1609459200") = "example1234567890abcdef1234567890ab"
+const crypto = require('crypto');
+
+function signPartnerRequest({ method, pathWithQuery, timestamp, body, secret }) {
+  const bodyHash = crypto.createHash('sha256').update(body ?? '').digest('hex');
+  const payload = [
+    method.toUpperCase(),
+    pathWithQuery,
+    String(timestamp),
+    bodyHash,
+  ].join('\n');
+  return crypto.createHmac('sha256', secret).update(payload).digest('hex');
+}
+
+const timestamp = Math.floor(Date.now() / 1000);
+const pathWithQuery = '/api/partner/v1/vehicles';
+const signature = signPartnerRequest({
+  method: 'GET',
+  pathWithQuery,
+  timestamp,
+  body: '',
+  secret: process.env.FLEETICC_API_SECRET,
+});
+
+// GET https://api.fleeticc.com/api/partner/v1/vehicles
+// Headers:
+//   X-Api-Key: pk_...
+//   X-Timestamp: <timestamp>
+//   X-Signature: <signature>
 ```
 
-## Request Example
+## curl example
 
 ```bash
-curl "https://bounpkufhwhptqbktpfl.supabase.co/functions/v1/open-api-authorization?time=1609459200&account=example@example.com&password=ExamplePassword123&signature=example1234567890abcdef1234567890ab"
+BASE="https://api.fleeticc.com"
+PATH_Q="/api/partner/v1/vehicles"
+TS=$(date +%s)
+BODY_HASH=$(printf '' | openssl dgst -sha256 -hex | awk '{print $2}')
+PAYLOAD=$(printf 'GET\n%s\n%s\n%s' "$PATH_Q" "$TS" "$BODY_HASH")
+SIG=$(printf '%s' "$PAYLOAD" | openssl dgst -sha256 -hmac "$FLEETICC_API_SECRET" -hex | awk '{print $2}')
+
+curl -sS "$BASE$PATH_Q" \
+  -H "X-Api-Key: $FLEETICC_API_KEY" \
+  -H "X-Timestamp: $TS" \
+  -H "X-Signature: $SIG"
 ```
 
-## Response
+## Security notes
 
-<ResponseField name="code" type="number">
-  Response code (0 = success)
-</ResponseField>
-
-<ResponseField name="record" type="object">
-  <ResponseField name="access_token" type="string">
-    Secure token for API authentication (valid for 1 hour)
-  </ResponseField>
-  <ResponseField name="expires_in" type="number">
-    Token validity period in seconds (3600 = 1 hour)
-  </ResponseField>
-</ResponseField>
-
-<ResponseField name="timestamp" type="number">
-  Unix timestamp
-</ResponseField>
-
-### Success Response
-
-```json
-{
-  "code": 0,
-  "record": {
-    "access_token": "example_jwt_token_12345abcdefghijklmnopqrstuvwxyz",
-    "expires_in": 3600
-  },
-  "timestamp": 1609459200
-}
-```
-
-## Rate Limits
-
-5 authentication attempts per minute per account. Minimum interval: 12 seconds between attempts.
-
-## Error Codes
-
-<ErrorField code="10005" status="400">
-  Missing required parameters (time, account, password, or signature)
-</ErrorField>
-
-<ErrorField code="10014" status="400">
-  Invalid time parameter - Time must be within 5 minutes of current time
-</ErrorField>
-
-<ErrorField code="20001" status="401">
-  Invalid account or password - Email doesn't exist or password is incorrect
-</ErrorField>
-
-<ErrorField code="20001" status="401">
-  Invalid signature - Signature doesn't match calculated value. Check password and time parameter.
-</ErrorField>
-
-<ErrorField code="10007" status="403">
-  Permission denied - API access is only available for premium/pro users with active subscriptions
-</ErrorField>
-
-<ErrorField code="10009" status="429">
-  Too many authentication attempts - Rate limit exceeded. Please wait before retrying
-</ErrorField>
-
-<ErrorField code="10000" status="500">
-  Internal server error - System error occurred
-</ErrorField>
-
+- Keep `apiSecret` only on your server. Never embed it in a customer mobile app.
+- Sign the **exact** path + query the HTTP client sends (including parameter order).
+- Skewed clocks fail with `PARTNER_AUTH_TIMESTAMP_SKEW`.
+- Unknown, revoked, or badly signed keys return the same `401` + `PARTNER_AUTH_INVALID` (no key enumeration).
+- If Partner API is disabled for the owner: `403` + `PARTNER_EXTERNAL_API_DISABLED`.

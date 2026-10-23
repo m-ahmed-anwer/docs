@@ -21,12 +21,13 @@
             ]
           },
           {
-            "group": "Endpoints",
+            "group": "Partner API",
             "pages": [
               "api-reference/endpoint/authentication",
               "api-reference/endpoint/list-vehicles",
               "api-reference/endpoint/track",
               "api-reference/endpoint/playback",
+              "api-reference/endpoint/rate-limits",
               "api-reference/endpoint/error-codes"
             ]
           }
@@ -67,15 +68,15 @@
   },
   "contextual": {
     "options": [
-     "copy",
-     "view",
-     "chatgpt",
-     "claude",
-     "perplexity",
-     "mcp",
-     "cursor",
-     "vscode"
-   ]
+      "copy",
+      "view",
+      "chatgpt",
+      "claude",
+      "perplexity",
+      "mcp",
+      "cursor",
+      "vscode"
+    ]
   },
   "footer": {
     "socials": {

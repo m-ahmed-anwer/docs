@@ -1,38 +1,24 @@
-# Fleeticc API Documentation
+# Fleeticc docs (Mintlify)
 
-This repository contains the documentation for the Fleeticc Open API.
+Public Partner API documentation for **https://api.fleeticc.com**.
 
-## Getting Started
+Site: [https://fleeticc.com/docs](https://fleeticc.com/docs)
 
-The Fleeticc Open API provides programmatic access to vehicle tracking data, allowing you to integrate GPS tracking capabilities into your applications.
+## Local preview
 
-### Prerequisites
-
-- Active Fleeticc account (Basic or Premium plan)
-- API access tokens obtained through authentication
-
-### Base URL
-
-```
-https://bounpkufhwhptqbktpfl.supabase.co/functions/v1
+```bash
+npx mintlify dev
 ```
 
-## Available Endpoints
+## Scope
 
-- **Authentication** - Get access tokens for API requests
-- **List Vehicles** - Retrieve all vehicles in your account
-- **Track** - Get real-time GPS tracking data
-- **Playback** - Retrieve historical tracking data
-- **Error Codes** - Comprehensive error code reference
+Documents only the **Partner GPS API** (`/api/partner/v1`):
 
-## Documentation
+- Authentication (HMAC-SHA256)
+- List vehicles
+- Live track (+ SSE)
+- History (range + nearest for QR)
+- Rate limits
+- Error codes
 
-Visit our full API documentation at [https://fleeticc.com/docs](https://fleeticc.com/docs)
-
-## Support
-
-For support, please contact us at [info@fleeticc.com](mailto:info@fleeticc.com)
-
-## License
-
-Copyright © 2024 Fleeticc. All rights reserved.
+Admin console APIs are internal and are not published here.

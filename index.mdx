@@ -1,22 +1,24 @@
 ---
-title: "Fleeticc API Documentation"
-description: "Welcome to the Fleeticc Open API documentation"
+title: "Fleeticc Partner API"
+description: "Live and historical GPS for partner integrations on api.fleeticc.com"
 ---
 
-## Getting Started
+## Getting started
 
-Get started with the Fleeticc Open API to integrate GPS tracking capabilities into your applications.
+The **Fleeticc Partner API** gives your backend live vehicle positions, vehicle identity, and GPS history. It is separate from the Fleeticc mobile app and website (those use owner login JWTs).
 
 <Card
-  title="API Introduction"
+  title="API introduction"
   icon="rocket"
   href="/api-reference/introduction"
   horizontal
 >
-  Learn about authentication, rate limits, and subscription requirements.
+  Base URL, enablement, HMAC security, and available endpoints.
 </Card>
 
-## Quick Links
+## Available endpoints
+
+Only these Partner API routes are available today:
 
 <Columns cols={2}>
   <Card
@@ -24,49 +26,49 @@ Get started with the Fleeticc Open API to integrate GPS tracking capabilities in
     icon="key"
     href="/api-reference/endpoint/authentication"
   >
-    Get access tokens for API requests
+    HMAC-SHA256 request signing
   </Card>
   <Card
-    title="List Vehicles"
+    title="List vehicles"
     icon="car"
     href="/api-reference/endpoint/list-vehicles"
   >
-    Retrieve all vehicles in your account
+    `GET /api/partner/v1/vehicles`
   </Card>
   <Card
-    title="Track"
+    title="Live track"
     icon="map"
     href="/api-reference/endpoint/track"
   >
-    Get real-time GPS tracking data
+    Snapshot + SSE stream
   </Card>
   <Card
-    title="Playback"
+    title="History"
     icon="clock"
     href="/api-reference/endpoint/playback"
   >
-    Retrieve historical tracking data
+    Trip range + QR nearest point
   </Card>
 </Columns>
 
-## API Endpoints
-
-All endpoints require authentication and are available for Basic and Premium plan subscribers.
-
-<Warning>
-  Free plan users cannot access any Open API endpoints. Upgrade to Basic or Premium to get started.
-</Warning>
+Also see [rate limits](/api-reference/endpoint/rate-limits) and [error codes](/api-reference/endpoint/error-codes).
 
 ## Base URL
 
 ```
-https://bounpkufhwhptqbktpfl.supabase.co/functions/v1
+https://api.fleeticc.com/api/partner/v1
 ```
 
-## Need Help?
+All Partner API paths below are relative to `https://api.fleeticc.com`.
+
+<Warning>
+  Partner access is **off by default**. Fleeticc must enable External Partner API on your owner account and issue an HMAC API key. Contact [info@fleeticc.com](mailto:info@fleeticc.com) if you need access.
+</Warning>
+
+## Need help?
 
 <Card
-  title="Contact Support"
+  title="Contact support"
   icon="envelope"
   href="https://fleeticc.com/contact"
 >

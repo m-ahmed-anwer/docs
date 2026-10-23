@@ -1,8 +1,8 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "Fleeticc Open API",
-    "description": "Complete API reference for Fleeticc GPS vehicle tracking endpoints",
+    "title": "Fleeticc Partner API",
+    "description": "Live and historical GPS for partner backends. HMAC-SHA256 auth. Base: https://api.fleeticc.com",
     "version": "1.0.0",
     "contact": {
       "email": "info@fleeticc.com",
@@ -11,604 +11,196 @@
   },
   "servers": [
     {
-      "url": "https://bounpkufhwhptqbktpfl.supabase.co/functions/v1",
-      "description": "Production server"
+      "url": "https://api.fleeticc.com",
+      "description": "Production"
     }
   ],
-  "paths": {
-    "/open-api-authorization": {
-      "get": {
-        "summary": "Get Access Token",
-        "description": "Get an access token for making authenticated API requests. Access tokens are valid for 1 hour (3600 seconds).",
-        "operationId": "getAccessToken",
-        "parameters": [
-          {
-            "name": "time",
-            "in": "query",
-            "required": true,
-            "description": "Unix timestamp in seconds (when request is sent)",
-            "schema": {
-              "type": "integer",
-              "format": "int64"
-            }
-          },
-          {
-            "name": "account",
-            "in": "query",
-            "required": true,
-            "description": "User email address",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "password",
-            "in": "query",
-            "required": true,
-            "description": "Your Fleeticc account password",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "signature",
-            "in": "query",
-            "required": true,
-            "description": "MD5 hash = md5(md5(password) + time)",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AuthResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "Too Many Requests",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          }
-        }
+  "security": [
+    {
+      "PartnerHmac": []
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "PartnerHmac": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-Api-Key",
+        "description": "Also send X-Timestamp and X-Signature (HMAC-SHA256). See docs authentication page."
       }
     },
-    "/open-api-list-vehicles": {
-      "get": {
-        "summary": "List Vehicles",
-        "description": "Get a list of all vehicles (devices) associated with the authenticated user's account",
-        "operationId": "listVehicles",
-        "parameters": [
-          {
-            "name": "access_token",
-            "in": "query",
-            "required": true,
-            "description": "API access token from authorization endpoint",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/VehicleListResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "Too Many Requests",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          }
+    "schemas": {
+      "ApiSuccess": {
+        "type": "object",
+        "properties": {
+          "code": { "type": "string", "example": "200" },
+          "message": { "type": "string" },
+          "data": { "type": "object" }
         }
-      }
-    },
-    "/open-api-track": {
-      "get": {
-        "summary": "Track Vehicles",
-        "description": "Get the latest coordinate data for tracking devices (vehicles)",
-        "operationId": "trackVehicles",
-        "parameters": [
-          {
-            "name": "access_token",
-            "in": "query",
-            "required": true,
-            "description": "API access token from authorization endpoint",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "imeis",
-            "in": "query",
-            "required": true,
-            "description": "Comma-separated list of IMEIs (max 100)",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/TrackResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "Too Many Requests",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          }
+      },
+      "ApiError": {
+        "type": "object",
+        "properties": {
+          "code": { "type": "string", "example": "401" },
+          "message": { "type": "string" },
+          "data": { "nullable": true },
+          "error": { "type": "string", "example": "PARTNER_AUTH_INVALID" }
         }
-      }
-    },
-    "/open-api-playback": {
-      "get": {
-        "summary": "Playback Historical Data",
-        "description": "Get historical GPS tracking data for a device within a specified time period",
-        "operationId": "playback",
-        "parameters": [
-          {
-            "name": "access_token",
-            "in": "query",
-            "required": true,
-            "description": "API access token from authorization endpoint",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "imei",
-            "in": "query",
-            "required": true,
-            "description": "Single IMEI to get playback data for",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "begintime",
-            "in": "query",
-            "required": true,
-            "description": "Begin time (Unix timestamp in seconds)",
-            "schema": {
-              "type": "integer",
-              "format": "int64"
-            }
-          },
-          {
-            "name": "endtime",
-            "in": "query",
-            "required": true,
-            "description": "End time (Unix timestamp in seconds)",
-            "schema": {
-              "type": "integer",
-              "format": "int64"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/PlaybackResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "Too Many Requests",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          }
+      },
+      "PartnerVehicle": {
+        "type": "object",
+        "properties": {
+          "vehicleId": { "type": "string", "format": "uuid" },
+          "imei": { "type": "string" },
+          "plateNumber": { "type": "string" },
+          "vehicleName": { "type": "string" }
+        }
+      },
+      "PartnerLivePoint": {
+        "type": "object",
+        "properties": {
+          "vehicleId": { "type": "string" },
+          "imei": { "type": "string" },
+          "plateNumber": { "type": "string" },
+          "vehicleName": { "type": "string" },
+          "latitude": { "type": "number" },
+          "longitude": { "type": "number" },
+          "speed": { "type": "number" },
+          "course": { "type": "number" },
+          "accstatus": { "type": "integer" },
+          "gpstime": { "type": "integer" },
+          "servertime": { "type": "integer" },
+          "hearttime": { "type": "integer" },
+          "datastatus": { "type": "integer" },
+          "lastSeen": { "type": "integer" }
+        }
+      },
+      "PartnerHistoryPoint": {
+        "type": "object",
+        "properties": {
+          "timestamp": { "type": "integer" },
+          "latitude": { "type": "number" },
+          "longitude": { "type": "number" },
+          "speed": { "type": "number" },
+          "heading": { "type": "number" },
+          "accstatus": { "type": "integer", "nullable": true }
         }
       }
     }
   },
-  "components": {
-    "schemas": {
-      "AuthResponse": {
-        "type": "object",
-        "properties": {
-          "code": {
-            "type": "integer",
-            "description": "Response code (0 = success)"
-          },
-          "record": {
-            "type": "object",
-            "properties": {
-              "access_token": {
-                "type": "string",
-                "description": "Secure token for API authentication (valid for 1 hour)"
-              },
-              "expires_in": {
-                "type": "integer",
-                "description": "Token validity period in seconds (3600 = 1 hour)"
+  "paths": {
+    "/api/partner/v1/vehicles": {
+      "get": {
+        "summary": "List vehicles",
+        "operationId": "partnerListVehicles",
+        "responses": {
+          "200": {
+            "description": "Owner vehicles",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/ApiSuccess" }
+                  ]
+                }
               }
             }
-          },
-          "timestamp": {
-            "type": "integer",
-            "format": "int64",
-            "description": "Unix timestamp"
           }
         }
-      },
-      "Vehicle": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "Vehicle UUID"
+      }
+    },
+    "/api/partner/v1/track": {
+      "get": {
+        "summary": "Live GPS snapshot",
+        "operationId": "partnerTrackSnapshot",
+        "parameters": [
+          {
+            "name": "imeis",
+            "in": "query",
+            "schema": { "type": "string" },
+            "description": "Comma-separated IMEIs (1–100)"
           },
-          "imei": {
-            "type": "string",
-            "description": "Device IMEI number"
-          },
-          "name": {
-            "type": "string",
-            "description": "Vehicle name"
-          },
-          "plate_number": {
-            "type": "string",
-            "description": "Vehicle plate number"
-          },
-          "type": {
-            "type": "string",
-            "description": "Vehicle type"
-          },
-          "brand": {
-            "type": "string",
-            "description": "Vehicle brand"
-          },
-          "model": {
-            "type": "string",
-            "description": "Vehicle model"
-          },
-          "year": {
-            "type": "integer",
-            "description": "Vehicle year"
-          },
-          "color": {
-            "type": "string",
-            "description": "Vehicle color"
-          },
-          "status": {
-            "type": "string",
-            "description": "Vehicle status"
-          },
-          "devicename": {
-            "type": "string",
-            "description": "Device name"
-          },
-          "devicetype": {
-            "type": "string",
-            "description": "Device type"
-          },
-          "simcard": {
-            "type": "string",
-            "description": "SIM card number"
-          },
-          "iccid": {
-            "type": "string",
-            "description": "ICCID number"
-          },
-          "image_name": {
-            "type": "string",
-            "description": "Vehicle icon/image filename"
-          },
-          "created_at": {
-            "type": "string",
-            "format": "date-time",
-            "description": "Creation timestamp"
-          },
-          "updated_at": {
-            "type": "string",
-            "format": "date-time",
-            "description": "Last update timestamp"
+          {
+            "name": "vehicleIds",
+            "in": "query",
+            "schema": { "type": "string" },
+            "description": "Comma-separated vehicle UUIDs"
           }
-        }
-      },
-      "VehicleListResponse": {
-        "type": "object",
-        "properties": {
-          "code": {
-            "type": "integer",
-            "description": "Response code (0 = success)"
-          },
-          "record": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/Vehicle"
-            }
-          },
-          "cached": {
-            "type": "boolean",
-            "description": "Indicates if response was from cache"
-          },
-          "timestamp": {
-            "type": "integer",
-            "format": "int64",
-            "description": "Unix timestamp"
-          }
-        }
-      },
-      "TrackData": {
-        "type": "object",
-        "properties": {
-          "imei": {
-            "type": "string",
-            "description": "Device IMEI number"
-          },
-          "longitude": {
-            "type": "number",
-            "format": "double",
-            "description": "GPS longitude coordinate"
-          },
-          "latitude": {
-            "type": "number",
-            "format": "double",
-            "description": "GPS latitude coordinate"
-          },
-          "gpstime": {
-            "type": "integer",
-            "format": "int64",
-            "description": "GPS timestamp"
-          },
-          "servertime": {
-            "type": "integer",
-            "format": "int64",
-            "description": "Server timestamp"
-          },
-          "speed": {
-            "type": "number",
-            "description": "Vehicle speed"
-          },
-          "course": {
-            "type": "number",
-            "description": "Vehicle course/direction"
-          },
-          "battery": {
-            "type": "integer",
-            "description": "Battery percentage"
-          },
-          "mileage": {
-            "type": "number",
-            "description": "Total mileage"
-          },
-          "devicename": {
-            "type": "string",
-            "description": "Device name"
-          },
-          "platenumber": {
-            "type": "string",
-            "description": "Vehicle plate number"
-          },
-          "vehicleName": {
-            "type": "string",
-            "description": "Vehicle name"
-          }
-        }
-      },
-      "TrackResponse": {
-        "type": "object",
-        "properties": {
-          "code": {
-            "type": "integer",
-            "description": "Response code (0 = success)"
-          },
-          "record": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/TrackData"
-            }
-          },
-          "cached": {
-            "type": "boolean",
-            "description": "Indicates if response was from cache"
-          },
-          "timestamp": {
-            "type": "integer",
-            "format": "int64",
-            "description": "Unix timestamp"
-          }
-        }
-      },
-      "PlaybackResponse": {
-        "type": "object",
-        "properties": {
-          "code": {
-            "type": "integer",
-            "description": "Response code (0 = success)"
-          },
-          "record": {
-            "type": "string",
-            "description": "Semicolon-separated playback data"
-          },
-          "cached": {
-            "type": "boolean",
-            "description": "Indicates if response was from cache"
-          },
-          "timestamp": {
-            "type": "integer",
-            "format": "int64",
-            "description": "Unix timestamp"
-          }
-        }
-      },
-      "Error": {
-        "type": "object",
-        "required": [
-          "code",
-          "message"
         ],
-        "properties": {
-          "code": {
-            "type": "integer",
-            "description": "Error code number"
+        "responses": {
+          "200": { "description": "Live positions" }
+        }
+      }
+    },
+    "/api/partner/v1/track/stream": {
+      "get": {
+        "summary": "Live GPS SSE stream",
+        "operationId": "partnerTrackStream",
+        "parameters": [
+          {
+            "name": "imeis",
+            "in": "query",
+            "schema": { "type": "string" }
           },
-          "message": {
-            "type": "string",
-            "description": "Human-readable error message"
+          {
+            "name": "vehicleIds",
+            "in": "query",
+            "schema": { "type": "string" }
           }
+        ],
+        "responses": {
+          "200": {
+            "description": "text/event-stream",
+            "content": {
+              "text/event-stream": {
+                "schema": { "type": "string" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/partner/v1/history": {
+      "get": {
+        "summary": "GPS history or nearest point",
+        "operationId": "partnerHistory",
+        "parameters": [
+          {
+            "name": "vehicleId",
+            "in": "query",
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "imei",
+            "in": "query",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "schema": { "type": "integer" },
+            "description": "Range start (Unix seconds)"
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": { "type": "integer" },
+            "description": "Range end (Unix seconds)"
+          },
+          {
+            "name": "at",
+            "in": "query",
+            "schema": { "type": "integer" },
+            "description": "Nearest-point timestamp (QR scan)"
+          },
+          {
+            "name": "windowSeconds",
+            "in": "query",
+            "schema": { "type": "integer", "default": 300 }
+          }
+        ],
+        "responses": {
+          "200": { "description": "History range or nearest point" }
         }
       }
     }
