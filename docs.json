@@ -28,7 +28,6 @@
               "api-reference/endpoint/list-vehicles",
               "api-reference/endpoint/track",
               "api-reference/endpoint/playback",
-              "api-reference/endpoint/webhooks",
               "api-reference/endpoint/rate-limits",
               "api-reference/endpoint/error-codes"
             ]
