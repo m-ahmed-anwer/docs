@@ -251,7 +251,7 @@
     "/api/partner/v1/history": {
       "get": {
         "summary": "GPS history or nearest point",
-        "description": "Trip range (from+to, max ~31 days) or nearest point (at).",
+        "description": "Trip range (from+to, max 7 days) or nearest point (at).",
         "operationId": "partnerHistory",
         "parameters": [
           { "$ref": "#/components/parameters/XApiKey" },
@@ -283,7 +283,7 @@
             "in": "query",
             "required": false,
             "schema": { "type": "integer", "example": 1761200000 },
-            "description": "Range end (Unix seconds). Required with from. Max span ~31 days."
+            "description": "Range end (Unix seconds). Required with from. Max span 7 days."
           },
           {
             "name": "at",
